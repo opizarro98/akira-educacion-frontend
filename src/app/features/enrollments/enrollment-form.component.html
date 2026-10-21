@@ -1,0 +1,140 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ isEdit ? 'Editar matrícula' : 'Nueva matrícula' }}</h5>
+                <a class="btn btn-outline-secondary btn-sm" routerLink="/enrollments">Volver al listado</a>
+            </div>
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+
+                @if (currentStatus() && currentStatus() !== 'DRAFT') {
+                <div class="alert alert-warning" role="alert">
+                    Esta matrícula está en estado {{ currentStatus() }} y no puede editarse libremente.
+                </div>
+                }
+
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando matrícula...
+                </div>
+                } @else {
+                <form [formGroup]="form" (ngSubmit)="save()">
+                    <h6 class="mb-3">Datos de la matrícula</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="studentId">Estudiante *</label>
+                            <select id="studentId" class="form-select" formControlName="studentId"
+                                [class.is-invalid]="form.controls.studentId.touched && form.controls.studentId.invalid">
+                                <option value="">Seleccione un estudiante</option>
+                                @for (student of students(); track student.id) {
+                                <option [value]="student.id">{{ student.lastName }}, {{ student.firstName }}</option>
+                                }
+                            </select>
+                            @if (form.controls.studentId.touched && form.controls.studentId.invalid) {
+                            <div class="invalid-feedback">Seleccione un estudiante.</div>
+                            }
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="educationalLevelId">Nivel educativo *</label>
+                            <select id="educationalLevelId" class="form-select" formControlName="educationalLevelId"
+                                [class.is-invalid]="form.controls.educationalLevelId.touched && form.controls.educationalLevelId.invalid">
+                                <option value="">Seleccione un nivel</option>
+                                @for (level of levels(); track level.id) {
+                                <option [value]="level.id">{{ level.name }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="planId">Plan</label>
+                            <select id="planId" class="form-select" formControlName="planId">
+                                <option value="">Sin plan</option>
+                                @for (plan of plans(); track plan.id) {
+                                <option [value]="plan.id">{{ plan.name }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="academicPeriodId">Período lectivo</label>
+                            <select id="academicPeriodId" class="form-select" formControlName="academicPeriodId">
+                                <option value="">Sin período (opcional)</option>
+                                @for (period of periods(); track period.id) {
+                                <option [value]="period.id">{{ period.name }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="agreedPrice">Precio acordado *</label>
+                            <input id="agreedPrice" type="number" step="0.01" class="form-control"
+                                formControlName="agreedPrice"
+                                [class.is-invalid]="form.controls.agreedPrice.touched && form.controls.agreedPrice.invalid" />
+                            <div class="form-text">Se conserva aunque cambie el catálogo.</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="startDate">Fecha de inicio *</label>
+                            <input id="startDate" type="date" class="form-control" formControlName="startDate" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="endDate">Fecha de finalización</label>
+                            <input id="endDate" type="date" class="form-control" formControlName="endDate" />
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label" for="notes">Notas</label>
+                            <input id="notes" class="form-control" formControlName="notes" />
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3 mt-2">Servicios adicionales</h6>
+                    <div formArrayName="services">
+                        @for (group of servicesArray.controls; track group; let i = $index) {
+                        <div class="row g-2 align-items-end mb-2" [formGroupName]="i">
+                            <div class="col-md-5">
+                                <label class="form-label" [for]="'service' + i">Servicio</label>
+                                <select [id]="'service' + i" class="form-select" formControlName="serviceId"
+                                    (change)="onServiceSelected(i)">
+                                    <option value="">Seleccione un servicio</option>
+                                    @for (service of services(); track service.id) {
+                                    <option [value]="service.id">{{ service.name }}</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label" [for]="'qty' + i">Cantidad</label>
+                                <input [id]="'qty' + i" type="number" class="form-control" formControlName="quantity" />
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" [for]="'price' + i">Precio acordado</label>
+                                <input [id]="'price' + i" type="number" step="0.01" class="form-control"
+                                    formControlName="agreedPrice" />
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-danger w-100"
+                                    (click)="removeServiceLine(i)">Quitar</button>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm mb-4" (click)="addServiceLine()">
+                        <i class="ti ti-plus me-1"></i>Agregar servicio
+                    </button>
+
+                    <div class="d-block">
+                        <button type="submit" class="btn btn-primary me-2" [disabled]="saving()">
+                            @if (saving()) {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Guardando...
+                            } @else {
+                            {{ isEdit ? 'Guardar cambios' : 'Crear matrícula' }}
+                            }
+                        </button>
+                        <a class="btn btn-outline-secondary" routerLink="/enrollments">Cancelar</a>
+                    </div>
+                </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

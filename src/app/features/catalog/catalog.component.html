@@ -1,0 +1,490 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Catálogo</h5>
+                <span class="text-muted f-14">
+                    Niveles, períodos, servicios, planes y tarifas de la institución. Los precios se
+                    administran aquí y se copian a cada matrícula.
+                </span>
+            </div>
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+                @if (success()) {
+                <div class="alert alert-success" role="alert">{{ success() }}</div>
+                }
+
+                <ul class="nav nav-tabs mb-3">
+                    <li class="nav-item">
+                        <button type="button" class="nav-link" [class.active]="tab() === 'levels'"
+                            (click)="selectTab('levels')">Niveles</button>
+                    </li>
+                    <li class="nav-item">
+                        <button type="button" class="nav-link" [class.active]="tab() === 'periods'"
+                            (click)="selectTab('periods')">Períodos</button>
+                    </li>
+                    <li class="nav-item">
+                        <button type="button" class="nav-link" [class.active]="tab() === 'services'"
+                            (click)="selectTab('services')">Servicios</button>
+                    </li>
+                    <li class="nav-item">
+                        <button type="button" class="nav-link" [class.active]="tab() === 'plans'"
+                            (click)="selectTab('plans')">Planes</button>
+                    </li>
+                    <li class="nav-item">
+                        <button type="button" class="nav-link" [class.active]="tab() === 'rates'"
+                            (click)="selectTab('rates')">Tarifas</button>
+                    </li>
+                </ul>
+
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted mb-3">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando catálogo...
+                </div>
+                }
+
+                <!-- ------------------------------ Niveles ------------------------------ -->
+                @if (tab() === 'levels') {
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Niveles educativos</h6>
+                    @if (canWrite()) {
+                    <button type="button" class="btn btn-sm btn-primary" (click)="editLevel()">
+                        <i class="ti ti-plus me-1"></i>Nuevo nivel
+                    </button>
+                    }
+                </div>
+
+                @if (showLevelForm()) {
+                <form [formGroup]="levelForm" (ngSubmit)="saveLevel()" class="border rounded p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="levelName">Nombre *</label>
+                            <input id="levelName" class="form-control" formControlName="name"
+                                [class.is-invalid]="levelForm.controls.name.touched && levelForm.controls.name.invalid" />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label" for="levelCode">Código</label>
+                            <input id="levelCode" class="form-control" formControlName="code" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="levelDescription">Descripción</label>
+                            <input id="levelDescription" class="form-control" formControlName="description" />
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label" for="levelOrder">Orden</label>
+                            <input id="levelOrder" type="number" class="form-control" formControlName="sortOrder" />
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="levelActive"
+                                    formControlName="active" />
+                                <label class="form-check-label" for="levelActive">Activo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary me-2" [disabled]="saving()">Guardar</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        (click)="showLevelForm.set(false)">Cancelar</button>
+                </form>
+                }
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Código</th>
+                                <th>Orden</th>
+                                <th>Estado</th>
+                                @if (canWrite()) { <th class="text-end">Acciones</th> }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (level of levels(); track level.id) {
+                            <tr>
+                                <td>{{ level.name }}</td>
+                                <td>{{ level.code || '-' }}</td>
+                                <td>{{ level.sortOrder }}</td>
+                                <td>
+                                    <span class="badge" [class.bg-light-success]="level.active"
+                                        [class.bg-light-danger]="!level.active">
+                                        {{ level.active ? 'Activo' : 'Inactivo' }}
+                                    </span>
+                                </td>
+                                @if (canWrite()) {
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                        (click)="editLevel(level)">Editar</button>
+                                </td>
+                                }
+                            </tr>
+                            } @empty {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">Sin niveles registrados.</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+
+                <!-- ------------------------------ Períodos ------------------------------ -->
+                @if (tab() === 'periods') {
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-0">Períodos lectivos</h6>
+                        <span class="text-muted f-14">Opcionales: una matrícula puede no tener período.</span>
+                    </div>
+                    @if (canWrite()) {
+                    <button type="button" class="btn btn-sm btn-primary" (click)="editPeriod()">
+                        <i class="ti ti-plus me-1"></i>Nuevo período
+                    </button>
+                    }
+                </div>
+
+                @if (showPeriodForm()) {
+                <form [formGroup]="periodForm" (ngSubmit)="savePeriod()" class="border rounded p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="periodName">Nombre *</label>
+                            <input id="periodName" class="form-control" formControlName="name"
+                                [class.is-invalid]="periodForm.controls.name.touched && periodForm.controls.name.invalid" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="periodStart">Inicio *</label>
+                            <input id="periodStart" type="date" class="form-control" formControlName="startDate" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="periodEnd">Fin *</label>
+                            <input id="periodEnd" type="date" class="form-control" formControlName="endDate" />
+                        </div>
+                        <div class="col-md-2 mb-3 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="periodActive"
+                                    formControlName="active" />
+                                <label class="form-check-label" for="periodActive">Activo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary me-2" [disabled]="saving()">Guardar</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        (click)="showPeriodForm.set(false)">Cancelar</button>
+                </form>
+                }
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Estado</th>
+                                @if (canWrite()) { <th class="text-end">Acciones</th> }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (period of periods(); track period.id) {
+                            <tr>
+                                <td>{{ period.name }}</td>
+                                <td>{{ period.startDate }}</td>
+                                <td>{{ period.endDate }}</td>
+                                <td>
+                                    <span class="badge" [class.bg-light-success]="period.active"
+                                        [class.bg-light-danger]="!period.active">
+                                        {{ period.active ? 'Activo' : 'Inactivo' }}
+                                    </span>
+                                </td>
+                                @if (canWrite()) {
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                        (click)="editPeriod(period)">Editar</button>
+                                </td>
+                                }
+                            </tr>
+                            } @empty {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">Sin períodos registrados.</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+
+                <!-- ------------------------------ Servicios ------------------------------ -->
+                @if (tab() === 'services') {
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Servicios</h6>
+                    @if (canWrite()) {
+                    <button type="button" class="btn btn-sm btn-primary" (click)="editService()">
+                        <i class="ti ti-plus me-1"></i>Nuevo servicio
+                    </button>
+                    }
+                </div>
+
+                @if (showServiceForm()) {
+                <form [formGroup]="serviceForm" (ngSubmit)="saveService()" class="border rounded p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label" for="serviceName">Nombre *</label>
+                            <input id="serviceName" class="form-control" formControlName="name"
+                                [class.is-invalid]="serviceForm.controls.name.touched && serviceForm.controls.name.invalid" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="serviceCode">Código</label>
+                            <input id="serviceCode" class="form-control" formControlName="code" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="serviceDescription">Descripción</label>
+                            <input id="serviceDescription" class="form-control" formControlName="description" />
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="serviceActive"
+                                    formControlName="active" />
+                                <label class="form-check-label" for="serviceActive">Activo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary me-2" [disabled]="saving()">Guardar</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        (click)="showServiceForm.set(false)">Cancelar</button>
+                </form>
+                }
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                @if (canWrite()) { <th class="text-end">Acciones</th> }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (service of services(); track service.id) {
+                            <tr>
+                                <td>{{ service.name }}</td>
+                                <td>{{ service.code || '-' }}</td>
+                                <td>{{ service.description || '-' }}</td>
+                                <td>
+                                    <span class="badge" [class.bg-light-success]="service.active"
+                                        [class.bg-light-danger]="!service.active">
+                                        {{ service.active ? 'Activo' : 'Inactivo' }}
+                                    </span>
+                                </td>
+                                @if (canWrite()) {
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                        (click)="editService(service)">Editar</button>
+                                </td>
+                                }
+                            </tr>
+                            } @empty {
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">Sin servicios registrados.</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+
+                <!-- ------------------------------- Planes ------------------------------- -->
+                @if (tab() === 'plans') {
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Planes</h6>
+                    @if (canWrite()) {
+                    <button type="button" class="btn btn-sm btn-primary" (click)="editPlan()">
+                        <i class="ti ti-plus me-1"></i>Nuevo plan
+                    </button>
+                    }
+                </div>
+
+                @if (showPlanForm()) {
+                <form [formGroup]="planForm" (ngSubmit)="savePlan()" class="border rounded p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label" for="planName">Nombre *</label>
+                            <input id="planName" class="form-control" formControlName="name"
+                                [class.is-invalid]="planForm.controls.name.touched && planForm.controls.name.invalid" />
+                        </div>
+                        <div class="col-md-5 mb-3">
+                            <label class="form-label" for="planDescription">Descripción</label>
+                            <input id="planDescription" class="form-control" formControlName="description" />
+                        </div>
+                        <div class="col-md-2 mb-3 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="planActive"
+                                    formControlName="active" />
+                                <label class="form-check-label" for="planActive">Activo</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="planServices">Servicios incluidos</label>
+                            <select id="planServices" class="form-select" multiple size="5"
+                                formControlName="serviceIds">
+                                @for (service of services(); track service.id) {
+                                <option [value]="service.id">{{ service.name }}</option>
+                                }
+                            </select>
+                            <div class="form-text">Use Ctrl/Cmd para seleccionar varios servicios.</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary me-2" [disabled]="saving()">Guardar</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        (click)="showPlanForm.set(false)">Cancelar</button>
+                </form>
+                }
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Servicios incluidos</th>
+                                <th>Estado</th>
+                                @if (canWrite()) { <th class="text-end">Acciones</th> }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (plan of plans(); track plan.id) {
+                            <tr>
+                                <td>{{ plan.name }}</td>
+                                <td>
+                                    @for (service of plan.services; track service.id) {
+                                    <span class="badge bg-light-primary me-1">{{ service.name }}</span>
+                                    } @empty {
+                                    <span class="text-muted">Sin servicios</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge" [class.bg-light-success]="plan.active"
+                                        [class.bg-light-danger]="!plan.active">
+                                        {{ plan.active ? 'Activo' : 'Inactivo' }}
+                                    </span>
+                                </td>
+                                @if (canWrite()) {
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                        (click)="editPlan(plan)">Editar</button>
+                                </td>
+                                }
+                            </tr>
+                            } @empty {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-3">Sin planes registrados.</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+
+                <!-- ------------------------------- Tarifas ------------------------------ -->
+                @if (tab() === 'rates') {
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="mb-0">Tarifas</h6>
+                        <span class="text-muted f-14">
+                            Cada tarifa tiene vigencia. Al crear una matrícula se copia el precio acordado.
+                        </span>
+                    </div>
+                    @if (canWrite()) {
+                    <button type="button" class="btn btn-sm btn-primary" (click)="editRate()">
+                        <i class="ti ti-plus me-1"></i>Nueva tarifa
+                    </button>
+                    }
+                </div>
+
+                @if (showRateForm()) {
+                <form [formGroup]="rateForm" (ngSubmit)="saveRate()" class="border rounded p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="rateService">Servicio *</label>
+                            <select id="rateService" class="form-select" formControlName="serviceId"
+                                [class.is-invalid]="rateForm.controls.serviceId.touched && rateForm.controls.serviceId.invalid">
+                                <option value="">Seleccione un servicio</option>
+                                @for (service of services(); track service.id) {
+                                <option [value]="service.id">{{ service.name }}</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label" for="rateAmount">Monto *</label>
+                            <input id="rateAmount" type="number" step="0.01" class="form-control"
+                                formControlName="amount" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="rateFrom">Vigente desde *</label>
+                            <input id="rateFrom" type="date" class="form-control" formControlName="validFrom" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="rateTo">Vigente hasta</label>
+                            <input id="rateTo" type="date" class="form-control" formControlName="validTo" />
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rateActive"
+                                    formControlName="active" />
+                                <label class="form-check-label" for="rateActive">Activa</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary me-2" [disabled]="saving()">Guardar</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                        (click)="showRateForm.set(false)">Cancelar</button>
+                </form>
+                }
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Servicio</th>
+                                <th>Monto</th>
+                                <th>Desde</th>
+                                <th>Hasta</th>
+                                <th>Estado</th>
+                                @if (canWrite()) { <th class="text-end">Acciones</th> }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (rate of rates(); track rate.id) {
+                            <tr>
+                                <td>{{ rate.serviceName }}</td>
+                                <td>{{ rate.amount }}</td>
+                                <td>{{ rate.validFrom }}</td>
+                                <td>{{ rate.validTo || 'Sin límite' }}</td>
+                                <td>
+                                    <span class="badge" [class.bg-light-success]="rate.active"
+                                        [class.bg-light-danger]="!rate.active">
+                                        {{ rate.active ? 'Activa' : 'Inactiva' }}
+                                    </span>
+                                </td>
+                                @if (canWrite()) {
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
+                                        (click)="editRate(rate)">Editar</button>
+                                </td>
+                                }
+                            </tr>
+                            } @empty {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">Sin tarifas registradas.</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

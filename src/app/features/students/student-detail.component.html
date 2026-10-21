@@ -1,0 +1,268 @@
+@if (error()) {
+<div class="alert alert-danger" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+<div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+@if (loading()) {
+<div class="card">
+    <div class="card-body d-flex align-items-center gap-2 text-muted">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Cargando expediente...
+    </div>
+</div>
+} @else if (student(); as current) {
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Expediente</h5>
+                @if (canWriteStudents()) {
+                <a class="btn btn-sm btn-outline-primary" [routerLink]="['/students', current.id, 'edit']">
+                    Editar
+                </a>
+                }
+            </div>
+            <div class="card-body">
+                <h5 class="mb-1">{{ current.lastName }}, {{ current.firstName }}</h5>
+                <span class="badge bg-light-primary mb-3">{{ studentStatusLabel(current.status) }}</span>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-5 text-muted fw-normal">Identificación</dt>
+                    <dd class="col-sm-7">{{ current.documentNumber || 'Sin registro' }}</dd>
+
+                    <dt class="col-sm-5 text-muted fw-normal">Tipo</dt>
+                    <dd class="col-sm-7">{{ current.documentType || '-' }}</dd>
+
+                    <dt class="col-sm-5 text-muted fw-normal">Nacimiento</dt>
+                    <dd class="col-sm-7">{{ current.birthDate || '-' }}</dd>
+
+                    <dt class="col-sm-5 text-muted fw-normal">Ingreso</dt>
+                    <dd class="col-sm-7">{{ current.admissionDate }}</dd>
+
+                    <dt class="col-sm-5 text-muted fw-normal">Correo</dt>
+                    <dd class="col-sm-7">{{ current.email || '-' }}</dd>
+
+                    <dt class="col-sm-5 text-muted fw-normal">Teléfono</dt>
+                    <dd class="col-sm-7">{{ current.phone || '-' }}</dd>
+
+                    <dt class="col-sm-5 text-muted fw-normal">Dirección</dt>
+                    <dd class="col-sm-7">{{ current.address || '-' }}</dd>
+                </dl>
+
+                @if (current.notes) {
+                <hr />
+                <span class="text-muted d-block f-14">Observaciones internas</span>
+                <p class="mb-0">{{ current.notes }}</p>
+                } @else if (current.notesRestricted) {
+                <hr />
+                <span class="text-muted f-14">Las observaciones internas requieren un permiso adicional.</span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Representantes</h5>
+                @if (canWriteRepresentatives()) {
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                    (click)="showNewRepresentative.set(!showNewRepresentative())">
+                    {{ showNewRepresentative() ? 'Cancelar' : 'Nuevo representante' }}
+                </button>
+                }
+            </div>
+            <div class="card-body">
+                @if (representatives().length === 0) {
+                <p class="text-muted mb-0">El estudiante aún no tiene representantes asociados.</p>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Representante</th>
+                                <th>Contacto</th>
+                                <th>Responsabilidades</th>
+                                @if (canWriteRepresentatives()) {
+                                <th class="text-end">Acciones</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (link of representatives(); track link.linkId) {
+                            <tr>
+                                <td>
+                                    <span class="fw-medium">{{ link.fullName }}</span>
+                                    <span class="d-block text-muted f-14">{{ link.relationship || 'Sin relación
+                                        declarada' }}</span>
+                                </td>
+                                <td>
+                                    <span class="d-block">{{ link.phone || '-' }}</span>
+                                    <span class="d-block text-muted f-14">{{ link.email || '-' }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light-primary me-1"
+                                        [class.opacity-50]="!link.primaryContact">Principal</span>
+                                    <span class="badge bg-light-success me-1"
+                                        [class.opacity-50]="!link.authorizedForCommunications">Comunicaciones</span>
+                                    <span class="badge bg-light-warning"
+                                        [class.opacity-50]="!link.authorizedForBilling">Cobro</span>
+                                </td>
+                                @if (canWriteRepresentatives()) {
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1"
+                                        (click)="togglePrimary(link)">
+                                        {{ link.primaryContact ? 'Quitar principal' : 'Hacer principal' }}
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        (click)="unlink(link)">Quitar</button>
+                                </td>
+                                }
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+
+                @if (canWriteRepresentatives()) {
+                <hr />
+                @if (showNewRepresentative()) {
+                <form [formGroup]="newRepresentativeForm" (ngSubmit)="createAndLink()" class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label" for="newFullName">Nombre completo *</label>
+                        <input id="newFullName" class="form-control" formControlName="fullName"
+                            [class.is-invalid]="newRepresentativeForm.controls.fullName.touched && newRepresentativeForm.controls.fullName.invalid" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="newDocument">Identificación</label>
+                        <input id="newDocument" class="form-control" formControlName="documentNumber" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="newRelationship">Relación</label>
+                        <input id="newRelationship" class="form-control" formControlName="relationship"
+                            placeholder="Madre, padre, tutor" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="newPhone">Teléfono</label>
+                        <input id="newPhone" class="form-control" formControlName="phone" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="newEmail">Correo</label>
+                        <input id="newEmail" type="email" class="form-control" formControlName="email"
+                            [class.is-invalid]="newRepresentativeForm.controls.email.touched && newRepresentativeForm.controls.email.invalid" />
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="newPrimary"
+                                formControlName="primaryContact" />
+                            <label class="form-check-label" for="newPrimary">Contacto principal</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="newComms"
+                                formControlName="authorizedForCommunications" />
+                            <label class="form-check-label" for="newComms">Autorizado para comunicaciones</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="newBilling"
+                                formControlName="authorizedForBilling" />
+                            <label class="form-check-label" for="newBilling">Autorizado para cobro</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+                            Crear y asociar
+                        </button>
+                    </div>
+                </form>
+                } @else {
+                <form [formGroup]="linkForm" (ngSubmit)="linkExisting()" class="row g-2 align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label" for="representativeId">Asociar representante existente</label>
+                        <select id="representativeId" class="form-select" formControlName="representativeId">
+                            <option value="">Seleccione un representante</option>
+                            @for (option of catalog(); track option.id) {
+                            <option [value]="option.id">{{ option.fullName }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="linkPrimary"
+                                formControlName="primaryContact" />
+                            <label class="form-check-label" for="linkPrimary">Principal</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="linkComms"
+                                formControlName="authorizedForCommunications" />
+                            <label class="form-check-label" for="linkComms">Comunicaciones</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="linkBilling"
+                                formControlName="authorizedForBilling" />
+                            <label class="form-check-label" for="linkBilling">Cobro</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-outline-primary" [disabled]="saving()">
+                            Asociar
+                        </button>
+                    </div>
+                </form>
+                }
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Matrículas</h5>
+                <a class="btn btn-sm btn-outline-primary" [routerLink]="['/enrollments/new']"
+                    [queryParams]="{ studentId: current.id }">
+                    Nueva matrícula
+                </a>
+            </div>
+            <div class="card-body">
+                @if (enrollments().length === 0) {
+                <p class="text-muted mb-0">El estudiante no tiene matrículas registradas.</p>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nivel</th>
+                                <th>Período</th>
+                                <th>Inicio</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (enrollment of enrollments(); track enrollment.id) {
+                            <tr>
+                                <td>
+                                    <a [routerLink]="['/enrollments', enrollment.id]">
+                                        {{ enrollment.educationalLevelName }}
+                                    </a>
+                                </td>
+                                <td>{{ enrollment.academicPeriodName || 'Sin período' }}</td>
+                                <td>{{ enrollment.startDate }}</td>
+                                <td>{{ enrollment.totalAmount ?? enrollment.subtotal }}</td>
+                                <td>
+                                    <span class="badge" [class]="enrollmentStatusClass(enrollment.status)">
+                                        {{ enrollmentStatusLabel(enrollment.status) }}
+                                    </span>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+}

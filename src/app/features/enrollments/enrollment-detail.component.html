@@ -1,0 +1,201 @@
+@if (error()) {
+<div class="alert alert-danger" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+<div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+@if (loading()) {
+<div class="card">
+    <div class="card-body d-flex align-items-center gap-2 text-muted">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Cargando matrícula...
+    </div>
+</div>
+} @else if (enrollment(); as current) {
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Matrícula</h5>
+                    <span class="text-muted f-14">
+                        <a [routerLink]="['/students', current.studentId]">{{ current.studentName }}</a>
+                    </span>
+                </div>
+                <span class="badge" [class]="statusClass(current.status)">
+                    {{ statusLabel(current.status) }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Nivel educativo</span>
+                        <strong>{{ current.educationalLevelName }}</strong>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Plan</span>
+                        <strong>{{ current.planName || 'Sin plan' }}</strong>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Período lectivo</span>
+                        <strong>{{ current.academicPeriodName || 'Sin período' }}</strong>
+                    </div>
+                    <div class="col-sm-3 mb-3">
+                        <span class="text-muted d-block f-14">Inicio</span>
+                        <strong>{{ current.startDate }}</strong>
+                    </div>
+                    <div class="col-sm-3 mb-3">
+                        <span class="text-muted d-block f-14">Finalización</span>
+                        <strong>{{ current.endDate || 'Sin fecha' }}</strong>
+                    </div>
+                </div>
+
+                <h6 class="mb-3">Servicios adicionales</h6>
+                @if (current.services.length === 0) {
+                <p class="text-muted">Sin servicios adicionales.</p>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-3">
+                        <thead>
+                            <tr>
+                                <th>Servicio</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">Precio acordado</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (line of current.services; track line.id) {
+                            <tr>
+                                <td>{{ line.serviceName }}</td>
+                                <td class="text-end">{{ line.quantity }}</td>
+                                <td class="text-end">{{ line.agreedPrice }}</td>
+                                <td class="text-end">{{ line.lineTotal }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-6 text-muted fw-normal">Precio acordado del plan</dt>
+                    <dd class="col-sm-6 text-end">{{ current.agreedPrice }}</dd>
+
+                    <dt class="col-sm-6 text-muted fw-normal">Servicios adicionales</dt>
+                    <dd class="col-sm-6 text-end">{{ current.servicesTotal }}</dd>
+
+                    <dt class="col-sm-6 text-muted fw-normal">Subtotal</dt>
+                    <dd class="col-sm-6 text-end">{{ current.subtotal }}</dd>
+
+                    <dt class="col-sm-6 text-muted fw-normal">
+                        IVA @if (current.vatRate !== null) { ({{ current.vatRate }}%) }
+                    </dt>
+                    <dd class="col-sm-6 text-end">
+                        @if (current.vatAmount !== null) {
+                        {{ current.vatAmount }}
+                        } @else {
+                        <span class="text-muted">Se calcula al confirmar</span>
+                        }
+                    </dd>
+
+                    <dt class="col-sm-6 fw-bold">Total</dt>
+                    <dd class="col-sm-6 text-end fw-bold">{{ current.totalAmount ?? current.subtotal }}</dd>
+                </dl>
+
+                @if (current.notes) {
+                <hr />
+                <span class="text-muted d-block f-14">Notas</span>
+                <p class="mb-0">{{ current.notes }}</p>
+                }
+                @if (current.cancellationReason) {
+                <div class="alert alert-warning mt-3 mb-0" role="alert">
+                    <strong>Motivo de cancelación:</strong> {{ current.cancellationReason }}
+                </div>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Historial</h5>
+            </div>
+            <div class="card-body">
+                @if (history().length === 0) {
+                <p class="text-muted mb-0">Sin eventos registrados.</p>
+                } @else {
+                <ul class="list-group list-group-flush">
+                    @for (entry of history(); track entry.id) {
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <span class="fw-medium">{{ entry.action }}</span>
+                                @if (entry.fromStatus || entry.toStatus) {
+                                <span class="text-muted f-14 ms-2">
+                                    {{ entry.fromStatus || '-' }} → {{ entry.toStatus || '-' }}
+                                </span>
+                                }
+                                @if (entry.reason) {
+                                <span class="d-block text-muted f-14">{{ entry.reason }}</span>
+                                }
+                            </div>
+                            <div class="text-end">
+                                <span class="d-block f-14 text-muted">{{ entry.occurredAt }}</span>
+                                <span class="d-block f-14 text-muted">{{ entry.actorEmail }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    }
+                </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Acciones</h5>
+            </div>
+            <div class="card-body">
+                @if (!canWrite()) {
+                <p class="text-muted mb-0">Su rol solo permite consultar matrículas.</p>
+                } @else {
+                @if (current.status === 'DRAFT') {
+                <button type="button" class="btn btn-primary w-100 mb-2" [disabled]="working()"
+                    (click)="confirmEnrollment()">Confirmar matrícula</button>
+                <a class="btn btn-outline-primary w-100 mb-2" [routerLink]="['/enrollments', current.id, 'edit']">Editar
+                    borrador</a>
+                }
+                @if (current.status === 'CONFIRMED') {
+                <button type="button" class="btn btn-outline-primary w-100 mb-2" [disabled]="working()"
+                    (click)="completeEnrollment()">Marcar como completada</button>
+                }
+
+                @if (current.status === 'DRAFT' || current.status === 'CONFIRMED') {
+                @if (!showCancel()) {
+                <button type="button" class="btn btn-outline-danger w-100" [disabled]="working()"
+                    (click)="showCancel.set(true)">Cancelar matrícula</button>
+                } @else {
+                <form [formGroup]="cancelForm" (ngSubmit)="cancelEnrollment()" class="border rounded p-3">
+                    <label class="form-label" for="cancelReason">Motivo de la cancelación *</label>
+                    <textarea id="cancelReason" class="form-control mb-2" rows="3" formControlName="reason"
+                        [class.is-invalid]="cancelForm.controls.reason.touched && cancelForm.controls.reason.invalid"></textarea>
+                    @if (cancelForm.controls.reason.touched && cancelForm.controls.reason.invalid) {
+                    <div class="invalid-feedback d-block mb-2">Indique el motivo de la cancelación.</div>
+                    }
+                    <button type="submit" class="btn btn-danger w-100 mb-2" [disabled]="working()">
+                        Confirmar cancelación
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary w-100"
+                        (click)="showCancel.set(false)">Volver</button>
+                </form>
+                }
+                }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+}

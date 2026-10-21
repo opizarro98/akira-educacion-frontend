@@ -60,6 +60,10 @@ export class AuthService {
         return roles.length === 0 || roles.some((role) => this.hasRole(role));
     }
 
+    hasPermission(code: string): boolean {
+        return (this.userSignal()?.permissions ?? []).includes(code);
+    }
+
     isPlatformAdmin(): boolean {
         return this.hasRole('PLATFORM_ADMIN');
     }

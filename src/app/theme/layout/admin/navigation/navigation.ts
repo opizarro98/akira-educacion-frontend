@@ -54,5 +54,43 @@ export function navigationFor(roles: string[]): NavigationItem[] {
     });
   }
 
+  const institutionRoles = ['INSTITUTION_ADMIN', 'SECRETARY', 'TREASURY', 'DIRECTOR'];
+  if (roles.some((role) => institutionRoles.includes(role))) {
+    items.push(
+      {
+        id: 'students',
+        title: 'Estudiantes',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/students',
+        icon: 'ti ti-users'
+      },
+      {
+        id: 'representatives',
+        title: 'Representantes',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/representatives',
+        icon: 'ti ti-user-check'
+      },
+      {
+        id: 'enrollments',
+        title: 'Matrículas',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/enrollments',
+        icon: 'ti ti-file-description'
+      },
+      {
+        id: 'catalog',
+        title: 'Catálogo',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/catalog',
+        icon: 'ti ti-list-details'
+      }
+    );
+  }
+
   return items;
 }

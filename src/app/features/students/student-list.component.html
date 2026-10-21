@@ -1,0 +1,117 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Estudiantes</h5>
+                    <span class="text-muted f-14">{{ totalElements() }} estudiante(s) registrados</span>
+                </div>
+                @if (canWrite()) {
+                <a class="btn btn-primary" routerLink="/students/new">
+                    <i class="ti ti-plus me-1"></i>Nuevo estudiante
+                </a>
+                }
+            </div>
+
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+                @if (success()) {
+                <div class="alert alert-success" role="alert">{{ success() }}</div>
+                }
+
+                <div class="row mb-3 g-2">
+                    <div class="col-md-5">
+                        <input type="search" class="form-control"
+                            placeholder="Buscar por nombres, apellidos o identificación" [ngModel]="search()"
+                            (ngModelChange)="search.set($event)" (keyup.enter)="applyFilters()" />
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" [ngModel]="status()" (ngModelChange)="status.set($event)">
+                            <option value="">Todos los estados</option>
+                            @for (option of statuses; track option.value) {
+                            <option [value]="option.value">{{ option.label }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-secondary me-2" type="button" (click)="applyFilters()">
+                            Buscar
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" (click)="clearFilters()">
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando estudiantes...
+                </div>
+                } @else if (students().length === 0) {
+                <div class="text-center text-muted py-5">
+                    <i class="ti ti-users fs-1 d-block mb-2"></i>
+                    No hay estudiantes que coincidan con los filtros.
+                </div>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Identificación</th>
+                                <th>Ingreso</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (student of students(); track student.id) {
+                            <tr>
+                                <td>
+                                    <a [routerLink]="['/students', student.id]" class="fw-medium">
+                                        {{ student.lastName }}, {{ student.firstName }}
+                                    </a>
+                                    @if (student.email) {
+                                    <span class="d-block text-muted f-14">{{ student.email }}</span>
+                                    }
+                                </td>
+                                <td>{{ student.documentNumber || 'Sin registro' }}</td>
+                                <td>{{ student.admissionDate }}</td>
+                                <td>
+                                    <span class="badge" [class]="statusClass(student.status)">
+                                        {{ statusLabel(student.status) }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary me-1"
+                                        [routerLink]="['/students', student.id]">Expediente</a>
+                                    @if (canWrite()) {
+                                    <a class="btn btn-sm btn-outline-primary me-1"
+                                        [routerLink]="['/students', student.id, 'edit']">Editar</a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger"
+                                        (click)="remove(student)">Eliminar</button>
+                                    }
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="text-muted f-14">Página {{ page() + 1 }} de {{ totalPages() || 1 }}</span>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="page() === 0"
+                            (click)="previousPage()">Anterior</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                            [disabled]="page() + 1 >= totalPages()" (click)="nextPage()">Siguiente</button>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
