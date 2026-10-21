@@ -7,7 +7,8 @@ import { RouterModule } from '@angular/router';
 import { environment } from 'src/environments/environment';
 
 // project import
-import { NavigationItem, NavigationItems } from '../navigation';
+import { NavigationItem, navigationFor } from '../navigation';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 import { NavCollapseComponent } from './nav-collapse/nav-collapse.component';
 import { NavGroupComponent } from './nav-group/nav-group.component';
@@ -24,6 +25,7 @@ import { SHARED_IMPORTS } from 'src/app/theme/shared/shared.module';
 })
 export class NavContentComponent implements OnInit {
   private location = inject(Location);
+  private authService = inject(AuthService);
 
   // public props
   readonly NavCollapsedMob = output<void>();
@@ -38,7 +40,7 @@ export class NavContentComponent implements OnInit {
 
   // Constructor
   constructor() {
-    this.navigations = NavigationItems;
+    this.navigations = navigationFor([...this.authService.roles()]);
     this.windowWidth = window.innerWidth;
   }
 

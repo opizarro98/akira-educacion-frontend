@@ -1,0 +1,192 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Instituciones</h5>
+                    <span class="text-muted f-14">{{ totalElements() }} institución(es) registradas</span>
+                </div>
+                <button type="button" class="btn btn-primary" (click)="toggleForm()">
+                    <i class="ti ti-plus me-1"></i>
+                    {{ showForm() ? 'Cancelar' : 'Nueva institución' }}
+                </button>
+            </div>
+
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+                @if (success()) {
+                <div class="alert alert-success" role="alert">{{ success() }}</div>
+                }
+
+                @if (showForm()) {
+                <form [formGroup]="form" (ngSubmit)="create()" class="border rounded p-3 mb-4">
+                    <h6 class="mb-3">Datos de la institución</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="legalName">Nombre legal *</label>
+                            <input id="legalName" class="form-control" formControlName="legalName"
+                                [class.is-invalid]="form.controls.legalName.touched && form.controls.legalName.invalid" />
+                            @if (form.controls.legalName.touched && form.controls.legalName.invalid) {
+                            <div class="invalid-feedback">El nombre legal es obligatorio.</div>
+                            }
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="tradeName">Nombre comercial</label>
+                            <input id="tradeName" class="form-control" formControlName="tradeName" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="taxId">Identificación tributaria</label>
+                            <input id="taxId" class="form-control" formControlName="taxId" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="email">Correo de contacto</label>
+                            <input id="email" type="email" class="form-control" formControlName="email"
+                                [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid" />
+                            @if (form.controls.email.touched && form.controls.email.invalid) {
+                            <div class="invalid-feedback">Ingrese un correo válido.</div>
+                            }
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="city">Ciudad</label>
+                            <input id="city" class="form-control" formControlName="city" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="country">País *</label>
+                            <input id="country" class="form-control" formControlName="country" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="timezone">Zona horaria *</label>
+                            <input id="timezone" class="form-control" formControlName="timezone" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="language">Idioma *</label>
+                            <input id="language" class="form-control" formControlName="language" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="currency">Moneda *</label>
+                            <input id="currency" class="form-control" formControlName="currency" maxlength="3"
+                                [class.is-invalid]="form.controls.currency.touched && form.controls.currency.invalid" />
+                            @if (form.controls.currency.touched && form.controls.currency.invalid) {
+                            <div class="invalid-feedback">Use un código ISO de 3 letras (por ejemplo USD).</div>
+                            }
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3 mt-2">Usuario administrador inicial</h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="adminFullName">Nombre completo *</label>
+                            <input id="adminFullName" class="form-control" formControlName="adminFullName"
+                                [class.is-invalid]="form.controls.adminFullName.touched && form.controls.adminFullName.invalid" />
+                            @if (form.controls.adminFullName.touched && form.controls.adminFullName.invalid) {
+                            <div class="invalid-feedback">El nombre es obligatorio.</div>
+                            }
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="adminEmail">Correo *</label>
+                            <input id="adminEmail" type="email" class="form-control" formControlName="adminEmail"
+                                [class.is-invalid]="form.controls.adminEmail.touched && form.controls.adminEmail.invalid" />
+                            @if (form.controls.adminEmail.touched && form.controls.adminEmail.invalid) {
+                            <div class="invalid-feedback">Ingrese un correo válido.</div>
+                            }
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="adminPassword">Contraseña inicial *</label>
+                            <input id="adminPassword" type="password" class="form-control"
+                                formControlName="adminPassword"
+                                [class.is-invalid]="form.controls.adminPassword.touched && form.controls.adminPassword.invalid" />
+                            @if (form.controls.adminPassword.touched && form.controls.adminPassword.invalid) {
+                            <div class="invalid-feedback">Debe tener al menos 8 caracteres.</div>
+                            }
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" [disabled]="saving()">
+                        @if (saving()) {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Guardando...
+                        } @else {
+                        Crear institución
+                        }
+                    </button>
+                </form>
+                }
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="search" class="form-control" placeholder="Buscar por nombre" [value]="search()"
+                                (input)="search.set($any($event.target).value)" (keyup.enter)="applySearch()" />
+                            <button class="btn btn-outline-secondary" type="button"
+                                (click)="applySearch()">Buscar</button>
+                            <button class="btn btn-outline-secondary" type="button"
+                                (click)="clearSearch()">Limpiar</button>
+                        </div>
+                    </div>
+                </div>
+
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando instituciones...
+                </div>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Nombre legal</th>
+                                <th>Nombre comercial</th>
+                                <th>Ciudad</th>
+                                <th>Moneda</th>
+                                <th>IVA</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (institution of institutions(); track institution.id) {
+                            <tr>
+                                <td>{{ institution.legalName }}</td>
+                                <td>{{ institution.tradeName || '-' }}</td>
+                                <td>{{ institution.city || '-' }}</td>
+                                <td>{{ institution.currency }}</td>
+                                <td>
+                                    @if (institution.vatEnabled) {
+                                    {{ institution.vatRate }}%
+                                    } @else {
+                                    No
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge" [class.bg-light-success]="institution.active"
+                                        [class.bg-light-danger]="!institution.active">
+                                        {{ institution.active ? 'Activa' : 'Inactiva' }}
+                                    </span>
+                                </td>
+                            </tr>
+                            } @empty {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-3">No hay instituciones registradas.
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="text-muted f-14">Página {{ page() + 1 }} de {{ totalPages() || 1 }}</span>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="page() === 0"
+                            (click)="previousPage()">Anterior</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                            [disabled]="page() + 1 >= totalPages()" (click)="nextPage()">Siguiente</button>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

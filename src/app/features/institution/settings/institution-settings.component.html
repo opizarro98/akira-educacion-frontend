@@ -1,0 +1,165 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Configuración de la institución</h5>
+                <span class="text-muted f-14">Estos datos se usan en recibos internos y reportes.</span>
+            </div>
+
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+                @if (success()) {
+                <div class="alert alert-success" role="alert">{{ success() }}</div>
+                }
+
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando configuración...
+                </div>
+                } @else {
+                <form [formGroup]="form" (ngSubmit)="save()">
+                    <h6 class="mb-3">Identificación</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="legalName">Nombre legal *</label>
+                            <input id="legalName" class="form-control" formControlName="legalName"
+                                [class.is-invalid]="form.controls.legalName.touched && form.controls.legalName.invalid" />
+                            @if (form.controls.legalName.touched && form.controls.legalName.invalid) {
+                            <div class="invalid-feedback">El nombre legal es obligatorio.</div>
+                            }
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="tradeName">Nombre comercial</label>
+                            <input id="tradeName" class="form-control" formControlName="tradeName" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="taxId">Identificación tributaria</label>
+                            <input id="taxId" class="form-control" formControlName="taxId" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="logoUrl">URL del logo</label>
+                            <input id="logoUrl" class="form-control" formControlName="logoUrl"
+                                placeholder="https://..." />
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3 mt-2">Contacto</h6>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="email">Correo</label>
+                            <input id="email" type="email" class="form-control" formControlName="email"
+                                [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid" />
+                            @if (form.controls.email.touched && form.controls.email.invalid) {
+                            <div class="invalid-feedback">Ingrese un correo válido.</div>
+                            }
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="phone">Teléfono</label>
+                            <input id="phone" class="form-control" formControlName="phone" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="website">Sitio web</label>
+                            <input id="website" class="form-control" formControlName="website" />
+                        </div>
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label" for="address">Dirección</label>
+                            <input id="address" class="form-control" formControlName="address" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="city">Ciudad</label>
+                            <input id="city" class="form-control" formControlName="city" />
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3 mt-2">Localización y moneda</h6>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="country">País *</label>
+                            <input id="country" class="form-control" formControlName="country" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="timezone">Zona horaria *</label>
+                            <input id="timezone" class="form-control" formControlName="timezone" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="language">Idioma *</label>
+                            <input id="language" class="form-control" formControlName="language" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="currency">Moneda *</label>
+                            <input id="currency" class="form-control" formControlName="currency" maxlength="3"
+                                [class.is-invalid]="form.controls.currency.touched && form.controls.currency.invalid" />
+                            @if (form.controls.currency.touched && form.controls.currency.invalid) {
+                            <div class="invalid-feedback">Use un código ISO de 3 letras (por ejemplo USD).</div>
+                            }
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3 mt-2">Marca</h6>
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="primaryColor">Color primario</label>
+                            <input id="primaryColor" class="form-control" formControlName="primaryColor"
+                                placeholder="#1e88e5" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="secondaryColor">Color secundario</label>
+                            <input id="secondaryColor" class="form-control" formControlName="secondaryColor" />
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3 mt-2">IVA</h6>
+                    <div class="row align-items-end">
+                        <div class="col-md-3 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="vatEnabled"
+                                    formControlName="vatEnabled" />
+                                <label class="form-check-label" for="vatEnabled">IVA habilitado</label>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="vatRate">Tasa (%)</label>
+                            <input id="vatRate" type="number" step="0.01" min="0" max="100" class="form-control"
+                                formControlName="vatRate" />
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label" for="vatEffectiveFrom">Vigente desde</label>
+                            <input id="vatEffectiveFrom" type="date" class="form-control"
+                                formControlName="vatEffectiveFrom" />
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3 mt-2">Módulos habilitados</h6>
+                    <div class="row">
+                        @for (module of modules; track module.code) {
+                        <div class="col-md-4 mb-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" [id]="'module-' + module.code"
+                                    [checked]="selectedModules().includes(module.code)"
+                                    (change)="toggleModule(module.code, $event)" />
+                                <label class="form-check-label" [for]="'module-' + module.code">{{ module.label
+                                    }}</label>
+                            </div>
+                        </div>
+                        }
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary" [disabled]="saving()">
+                            @if (saving()) {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Guardando...
+                            } @else {
+                            Guardar cambios
+                            }
+                        </button>
+                    </div>
+                </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

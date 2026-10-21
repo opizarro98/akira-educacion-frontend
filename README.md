@@ -42,6 +42,20 @@ La plantilla todavía no tiene un ejecutor de pruebas ni un objetivo `test` conf
 - No guardes secretos en Angular ni en variables `environment`: esos valores se entregan al navegador. Los archivos `.env` reales quedan excluidos de Git.
 - Para publicar bajo una subruta, configura el `base-href` para el destino en el proceso de compilación/despliegue.
 
+## Autenticación y API (Fase 1)
+
+- La URL base de la API se configura en `src/environments/environment.ts` (`apiUrl`).
+- `src/main.ts` provee `HttpClient` con el interceptor JWT y el interceptor de errores HTTP.
+- La sesión se gestiona en `src/app/core/services/auth.service.ts` (token y perfil en `localStorage`).
+- Rutas protegidas mediante `src/app/core/guards/auth.guard.ts` y `core/guards/role.guard.ts`.
+- Rutas disponibles:
+  - `/login`: inicio de sesión conectado al backend.
+  - `/dashboard`: panel según el rol.
+  - `/platform/institutions`: `PLATFORM_ADMIN`.
+  - `/institution/settings`: `INSTITUTION_ADMIN`.
+- El menú lateral se construye con los roles del usuario autenticado.
+- El backend debe estar en `http://localhost:8080` (CORS permitido para `http://localhost:4200`).
+
 ## Inicio del repositorio
 
 ```sh

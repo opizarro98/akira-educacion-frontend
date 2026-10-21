@@ -4,7 +4,8 @@ import { Component, inject, input, ChangeDetectionStrategy, ChangeDetectorRef } 
 import { NavigationEnd, Router, RouterModule, Event } from '@angular/router';
 
 // project import
-import { NavigationItem, NavigationItems } from 'src/app/theme/layout/admin/navigation/navigation';
+import { NavigationItem, navigationFor } from 'src/app/theme/layout/admin/navigation/navigation';
+import { AuthService } from 'src/app/core/services/auth.service';
 import { SHARED_IMPORTS } from '../../shared.module';
 
 interface titleType {
@@ -25,6 +26,7 @@ interface titleType {
 export class BreadcrumbComponent {
   private route = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private authService = inject(AuthService);
 
   // public props
   type = input<string>('icon');
@@ -35,7 +37,7 @@ export class BreadcrumbComponent {
 
   // constructor
   constructor() {
-    this.navigations = NavigationItems;
+    this.navigations = navigationFor([...this.authService.roles()]);
     this.setBreadcrumb();
   }
 

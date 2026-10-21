@@ -1,40 +1,50 @@
-// angular import
-import { ChangeDetectorRef, Component, inject, signal } from '@angular/core';
-import { RouterModule } from '@angular/router';
+// Angular import
+import { Component, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 
-import { email, form, minLength, required, FormField } from '@angular/forms/signals';
+import { AuthService } from 'src/app/core/services/auth.service';
 
 @Component({
   selector: 'app-login',
-  imports: [RouterModule, FormField],
+  imports: [RouterModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
 export class LoginComponent {
-  private cd = inject(ChangeDetectorRef);
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
-  submitted = signal(false);
-  error = signal('');
+  readonly loading = signal(false);
+  readonly error = signal('');
 
-  loginModal = signal<{ email: string; password: string }>({
-    email: 'info@coddedtheme.com',
-    password: '123456'
+  readonly loginForm = this.formBuilder.nonNullable.group({
+    email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
+    password: ['', [Validators.required, Validators.minLength(8)]]
   });
 
-  loginForm = form(this.loginModal, (schemaPath) => {
-    required(schemaPath.email, { message: 'Email is required' });
-    email(schemaPath.email, { message: 'Enter a valid email address' });
-    required(schemaPath.password, { message: 'Password is required' });
-    minLength(schemaPath.password, 8, { message: 'Password must be at least 8 characters' });
-  });
-
-  onSubmit(event: Event) {
-    this.submitted.set(true);
+  onSubmit(event: Event): void {
+    event.preventDefault();
     this.error.set('');
 
-    event.preventDefault();
-    const credentials = this.loginModal();
-    console.log('login user logged in with:', credentials);
-    this.cd.detectChanges();
+    if (this.loginForm.invalid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+
+    this.loading.set(true);
+    const { email, password } = this.loginForm.getRawValue();
+
+    this.authService.login(email, password).subscribe({
+      next: () => {
+        this.loading.set(false);
+        void this.router.navigateByUrl(this.authService.homeRoute());
+      },
+      error: (err: Error) => {
+        this.loading.set(false);
+        this.error.set(err.message);
+      }
+    });
   }
 }

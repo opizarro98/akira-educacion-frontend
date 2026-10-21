@@ -15,114 +15,44 @@ export interface NavigationItem {
   isMainParent?: boolean;
 }
 
-export const NavigationItems: NavigationItem[] = [
-  {
-    id: 'dashboard',
-    title: 'Dashboard',
-    type: 'group',
-    icon: 'icon-navigation',
-    children: [
-      {
-        id: 'default',
-        title: 'Dashboard',
-        type: 'item',
-        classes: 'nav-item',
-        url: '/default',
-        icon: 'ti ti-dashboard',
-        breadcrumbs: false
-      }
-    ]
-  },
-  {
-    id: 'page',
-    title: 'Pages',
-    type: 'group',
-    icon: 'icon-navigation',
-    children: [
-      {
-        id: 'Authentication',
-        title: 'Authentication',
-        type: 'collapse',
-        icon: 'ti ti-key',
-        children: [
-          {
-            id: 'login',
-            title: 'Login',
-            type: 'item',
-            url: '/login',
-            target: true,
-            breadcrumbs: false
-          },
-          {
-            id: 'register',
-            title: 'Register',
-            type: 'item',
-            url: '/register',
-            target: true,
-            breadcrumbs: false
-          }
-        ]
-      }
-    ]
-  },
-  {
-    id: 'elements',
-    title: 'Elements',
-    type: 'group',
-    icon: 'icon-navigation',
-    children: [
-      {
-        id: 'typography',
-        title: 'Typography',
-        type: 'item',
-        classes: 'nav-item',
-        url: '/typography',
-        icon: 'ti ti-typography'
-      },
-      {
-        id: 'color',
-        title: 'Colors',
-        type: 'item',
-        classes: 'nav-item',
-        url: '/color',
-        icon: 'ti ti-brush'
-      },
-      {
-        id: 'tabler',
-        title: 'Tabler',
-        type: 'item',
-        classes: 'nav-item',
-        url: 'https://tabler-icons.io/',
-        icon: 'ti ti-plant-2',
-        target: true,
-        external: true
-      }
-    ]
-  },
-  {
-    id: 'other',
-    title: 'Other',
-    type: 'group',
-    icon: 'icon-navigation',
-    children: [
-      {
-        id: 'sample-page',
-        title: 'Sample Page',
-        type: 'item',
-        url: '/sample-page',
-        classes: 'nav-item',
-        icon: 'ti ti-brand-chrome'
-      },
-      {
-        id: 'document',
-        title: 'Documentation',
-        type: 'item',
-        classes: 'nav-item',
-        url: 'https://codedthemes.gitbook.io/berry-angular/',
-        icon: 'ti ti-vocabulary',
-        target: true,
-        external: true
-      }
-    ]
+/**
+ * Menú lateral según los roles del usuario autenticado. Las rutas siguen
+ * protegidas por guards y, sobre todo, por permisos del backend.
+ */
+export function navigationFor(roles: string[]): NavigationItem[] {
+  const items: NavigationItem[] = [
+    {
+      id: 'dashboard',
+      title: 'Panel',
+      type: 'item',
+      classes: 'nav-item',
+      url: '/dashboard',
+      icon: 'ti ti-dashboard',
+      breadcrumbs: false
+    }
+  ];
+
+  if (roles.includes('PLATFORM_ADMIN')) {
+    items.push({
+      id: 'platform-institutions',
+      title: 'Instituciones',
+      type: 'item',
+      classes: 'nav-item',
+      url: '/platform/institutions',
+      icon: 'ti ti-building-bank'
+    });
   }
-];
+
+  if (roles.includes('INSTITUTION_ADMIN')) {
+    items.push({
+      id: 'institution-settings',
+      title: 'Mi institución',
+      type: 'item',
+      classes: 'nav-item',
+      url: '/institution/settings',
+      icon: 'ti ti-settings'
+    });
+  }
+
+  return items;
+}

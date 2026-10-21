@@ -1,0 +1,100 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="mb-1">Bienvenido, {{ auth.user()?.fullName }}</h4>
+                <p class="text-muted mb-0">
+                    {{ auth.roleLabel() }}
+                    @if (auth.user()?.institutionName) {
+                    &middot; {{ auth.user()?.institutionName }}
+                    }
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (error()) {
+<div class="alert alert-danger" role="alert">{{ error() }}</div>
+}
+
+@if (auth.isPlatformAdmin()) {
+<div class="row">
+    <div class="col-md-6 col-xl-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-2">Instituciones</h5>
+                <p class="text-muted">Cree y administre las instituciones de la plataforma.</p>
+                <a class="btn btn-primary" [routerLink]="['/platform/institutions']">Administrar instituciones</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-2">Alcance global</h5>
+                <p class="text-muted mb-0">
+                    Su cuenta de plataforma no pertenece a una institución. Toda operación sobre instituciones
+                    queda registrada en la auditoría.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+} @else {
+<div class="row">
+    <div class="col-md-12 col-xl-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Resumen de la institución</h5>
+            </div>
+            <div class="card-body">
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando información...
+                </div>
+                } @else if (institution(); as inst) {
+                <div class="row">
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Nombre legal</span>
+                        <strong>{{ inst.legalName }}</strong>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Nombre comercial</span>
+                        <strong>{{ inst.tradeName || 'No definido' }}</strong>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Moneda</span>
+                        <strong>{{ inst.currency }}</strong>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Zona horaria</span>
+                        <strong>{{ inst.timezone }}</strong>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">IVA</span>
+                        <strong>
+                            @if (inst.vatEnabled) {
+                            {{ inst.vatRate }}% desde {{ inst.vatEffectiveFrom }}
+                            } @else {
+                            No habilitado
+                            }
+                        </strong>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Módulos habilitados</span>
+                        <strong>{{ inst.modules.length }}</strong>
+                    </div>
+                </div>
+                @if (auth.hasRole('INSTITUTION_ADMIN')) {
+                <a class="btn btn-primary" [routerLink]="['/institution/settings']">Editar configuración</a>
+                }
+                } @else {
+                <p class="text-muted mb-0">No se pudo cargar la información de la institución.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+}
