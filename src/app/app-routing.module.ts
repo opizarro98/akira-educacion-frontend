@@ -119,6 +119,62 @@ const appRoutes: Routes = [
           import('./features/enrollments/enrollment-detail.component').then(
             (c) => c.EnrollmentDetailComponent
           )
+      },
+      {
+        path: 'billing/charges',
+        canActivate: [roleGuard(['INSTITUTION_ADMIN', 'SECRETARY', 'TREASURY', 'DIRECTOR'])],
+        loadComponent: () =>
+          import('./features/billing/charge-list.component').then((c) => c.ChargeListComponent)
+      },
+      {
+        path: 'billing/charges/new',
+        canActivate: [roleGuard(['INSTITUTION_ADMIN', 'SECRETARY', 'TREASURY'])],
+        loadComponent: () =>
+          import('./features/billing/charge-form.component').then((c) => c.ChargeFormComponent)
+      },
+      {
+        path: 'billing/charges/:id',
+        canActivate: [roleGuard(['INSTITUTION_ADMIN', 'SECRETARY', 'TREASURY', 'DIRECTOR'])],
+        loadComponent: () =>
+          import('./features/billing/charge-detail.component').then((c) => c.ChargeDetailComponent)
+      },
+      {
+        path: 'billing/concepts',
+        canActivate: [roleGuard(['INSTITUTION_ADMIN', 'SECRETARY', 'TREASURY', 'DIRECTOR'])],
+        loadComponent: () =>
+          import('./features/billing/billing-concepts.component').then(
+            (c) => c.BillingConceptsComponent
+          )
+      },
+      {
+        path: 'billing/payments',
+        canActivate: [roleGuard(['INSTITUTION_ADMIN', 'SECRETARY', 'TREASURY', 'DIRECTOR'])],
+        loadComponent: () =>
+          import('./features/billing/payment-list.component').then((c) => c.PaymentListComponent)
+      },
+      {
+        path: 'billing/payments/new',
+        canActivate: [roleGuard(['INSTITUTION_ADMIN', 'TREASURY'])],
+        loadComponent: () =>
+          import('./features/billing/payment-form.component').then((c) => c.PaymentFormComponent)
+      },
+      {
+        path: 'billing/payments/:id',
+        canActivate: [roleGuard(['INSTITUTION_ADMIN', 'SECRETARY', 'TREASURY', 'DIRECTOR'])],
+        loadComponent: () =>
+          import('./features/billing/payment-detail.component').then((c) => c.PaymentDetailComponent)
+      },
+      {
+        path: 'billing/receipts',
+        canActivate: [roleGuard(['INSTITUTION_ADMIN', 'SECRETARY', 'TREASURY', 'DIRECTOR'])],
+        loadComponent: () =>
+          import('./features/billing/receipt-list.component').then((c) => c.ReceiptListComponent)
+      },
+      {
+        path: 'billing/receipts/:id',
+        canActivate: [roleGuard(['INSTITUTION_ADMIN', 'SECRETARY', 'TREASURY', 'DIRECTOR'])],
+        loadComponent: () =>
+          import('./features/billing/receipt-detail.component').then((c) => c.ReceiptDetailComponent)
       }
     ]
   },

@@ -1,0 +1,142 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Obligaciones de cobro</h5>
+                    <span class="text-muted f-14">{{ totalElements() }} obligación(es) registradas</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-secondary" routerLink="/billing/concepts">
+                        <i class="ti ti-list-details me-1"></i>Conceptos
+                    </a>
+                    @if (canWrite()) {
+                    <a class="btn btn-primary" routerLink="/billing/charges/new">
+                        <i class="ti ti-plus me-1"></i>Nueva obligación
+                    </a>
+                    }
+                </div>
+            </div>
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+
+                <div class="row mb-3 g-2">
+                    <div class="col-md-3">
+                        <select class="form-select" [ngModel]="status()" (ngModelChange)="status.set($event)">
+                            <option value="">Todos los estados</option>
+                            @for (option of statuses; track option.value) {
+                            <option [value]="option.value">{{ option.label }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" [ngModel]="studentId()" (ngModelChange)="studentId.set($event)">
+                            <option value="">Todos los estudiantes</option>
+                            @for (student of students(); track student.id) {
+                            <option [value]="student.id">{{ student.lastName }}, {{ student.firstName }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label f-14 mb-1" for="issueFrom">Emisión desde</label>
+                        <input id="issueFrom" type="date" class="form-control" [ngModel]="issueFrom()"
+                            (ngModelChange)="issueFrom.set($event)" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label f-14 mb-1" for="issueTo">Emisión hasta</label>
+                        <input id="issueTo" type="date" class="form-control" [ngModel]="issueTo()"
+                            (ngModelChange)="issueTo.set($event)" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label f-14 mb-1" for="dueFrom">Vencimiento desde</label>
+                        <input id="dueFrom" type="date" class="form-control" [ngModel]="dueFrom()"
+                            (ngModelChange)="dueFrom.set($event)" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label f-14 mb-1" for="dueTo">Vencimiento hasta</label>
+                        <input id="dueTo" type="date" class="form-control" [ngModel]="dueTo()"
+                            (ngModelChange)="dueTo.set($event)" />
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end gap-2">
+                        <button class="btn btn-outline-secondary" type="button" (click)="applyFilters()">
+                            Filtrar
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" (click)="clearFilters()">
+                            Limpiar
+                        </button>
+                    </div>
+                </div>
+
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando obligaciones...
+                </div>
+                } @else if (charges().length === 0) {
+                <div class="text-center text-muted py-5">
+                    <i class="ti ti-receipt fs-1 d-block mb-2"></i>
+                    No hay obligaciones que coincidan con los filtros.
+                </div>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Descripción</th>
+                                <th>Origen</th>
+                                <th>Emisión</th>
+                                <th>Vencimiento</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Saldo</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (charge of charges(); track charge.id) {
+                            <tr>
+                                <td>
+                                    <a [routerLink]="['/students', charge.studentId]" class="fw-medium">
+                                        {{ charge.studentName }}
+                                    </a>
+                                </td>
+                                <td>{{ charge.description || 'Sin descripción' }}</td>
+                                <td>
+                                    <span class="badge bg-light-secondary">{{ originLabel(charge.origin) }}</span>
+                                </td>
+                                <td>{{ charge.issueDate }}</td>
+                                <td>{{ charge.dueDate }}</td>
+                                <td class="text-end">{{ charge.total }} {{ charge.currency }}</td>
+                                <td class="text-end">{{ charge.balance }} {{ charge.currency }}</td>
+                                <td>
+                                    <span class="badge" [class]="statusClass(charge.status)">
+                                        {{ statusLabel(charge.status) }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                        [routerLink]="['/billing/charges', charge.id]">Ver</a>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="text-muted f-14">Página {{ page() + 1 }} de {{ totalPages() || 1 }}</span>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="page() === 0"
+                            (click)="previousPage()">Anterior</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                            [disabled]="page() + 1 >= totalPages()" (click)="nextPage()">Siguiente</button>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

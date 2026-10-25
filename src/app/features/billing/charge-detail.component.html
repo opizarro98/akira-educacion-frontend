@@ -1,0 +1,209 @@
+@if (error()) {
+<div class="alert alert-danger" role="alert">{{ error() }}</div>
+}
+@if (success()) {
+<div class="alert alert-success" role="alert">{{ success() }}</div>
+}
+
+@if (loading()) {
+<div class="card">
+    <div class="card-body d-flex align-items-center gap-2 text-muted">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Cargando obligación...
+    </div>
+</div>
+} @else if (charge(); as current) {
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Obligación de cobro</h5>
+                    <span class="text-muted f-14">
+                        <a [routerLink]="['/students', current.studentId]">{{ current.studentName }}</a>
+                        · {{ originLabel(current.origin) }}
+                    </span>
+                </div>
+                <span class="badge" [class]="statusClass(current.status)">
+                    {{ statusLabel(current.status) }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Descripción</span>
+                        <strong>{{ current.description || 'Sin descripción' }}</strong>
+                    </div>
+                    <div class="col-sm-3 mb-3">
+                        <span class="text-muted d-block f-14">Emisión</span>
+                        <strong>{{ current.issueDate }}</strong>
+                    </div>
+                    <div class="col-sm-3 mb-3">
+                        <span class="text-muted d-block f-14">Vencimiento</span>
+                        <strong>{{ current.dueDate }}</strong>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Usuario responsable</span>
+                        <strong>{{ current.responsibleEmail || 'Sistema' }}</strong>
+                    </div>
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Moneda</span>
+                        <strong>{{ current.currency }}</strong>
+                    </div>
+                    @if (current.enrollmentId) {
+                    <div class="col-sm-6 mb-3">
+                        <span class="text-muted d-block f-14">Matrícula de origen</span>
+                        <a [routerLink]="['/enrollments', current.enrollmentId]">Ver matrícula</a>
+                    </div>
+                    }
+                </div>
+
+                <h6 class="mb-3">Detalle de conceptos</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-3">
+                        <thead>
+                            <tr>
+                                <th>Concepto</th>
+                                <th class="text-end">Cant.</th>
+                                <th class="text-end">Precio</th>
+                                <th class="text-end">Descuento</th>
+                                <th class="text-end">Base</th>
+                                <th class="text-end">IVA</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (item of current.items; track item.id) {
+                            <tr>
+                                <td>
+                                    <span class="fw-medium">{{ item.conceptName }}</span>
+                                    <span class="d-block text-muted f-14">{{ item.description }}</span>
+                                </td>
+                                <td class="text-end">{{ item.quantity }}</td>
+                                <td class="text-end">{{ item.unitPrice }}</td>
+                                <td class="text-end">{{ item.discount }}</td>
+                                <td class="text-end">{{ item.taxableBase }}</td>
+                                <td class="text-end">{{ item.vatAmount }} ({{ item.vatRate }}%)</td>
+                                <td class="text-end fw-medium">{{ item.total }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-8 text-muted fw-normal">Subtotal</dt>
+                    <dd class="col-sm-4 text-end">{{ current.subtotal }} {{ current.currency }}</dd>
+
+                    <dt class="col-sm-8 text-muted fw-normal">IVA</dt>
+                    <dd class="col-sm-4 text-end">{{ current.taxAmount }} {{ current.currency }}</dd>
+
+                    <dt class="col-sm-8 fw-bold">Total</dt>
+                    <dd class="col-sm-4 text-end fw-bold">{{ current.total }} {{ current.currency }}</dd>
+
+                    <dt class="col-sm-8 text-muted fw-normal">Pagado</dt>
+                    <dd class="col-sm-4 text-end">{{ current.paidAmount }} {{ current.currency }}</dd>
+
+                    <dt class="col-sm-8 fw-bold">Saldo</dt>
+                    <dd class="col-sm-4 text-end fw-bold">{{ current.balance }} {{ current.currency }}</dd>
+                </dl>
+
+                @if (current.voidReason) {
+                <div class="alert alert-warning mt-3 mb-0" role="alert">
+                    <strong>Motivo de anulación:</strong> {{ current.voidReason }}
+                    @if (current.voidedAt) {
+                    <span class="d-block f-14 text-muted">{{ current.voidedAt }} · {{ current.voidedBy }}</span>
+                    }
+                </div>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Historial</h5>
+            </div>
+            <div class="card-body">
+                @if (history().length === 0) {
+                <p class="text-muted mb-0">Sin eventos registrados.</p>
+                } @else {
+                <ul class="list-group list-group-flush">
+                    @for (entry of history(); track entry.id) {
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <span class="fw-medium">{{ entry.action }}</span>
+                                @if (entry.fromStatus || entry.toStatus) {
+                                <span class="text-muted f-14 ms-2">
+                                    {{ entry.fromStatus || '-' }} → {{ entry.toStatus || '-' }}
+                                </span>
+                                }
+                                @if (entry.details) {
+                                <span class="d-block text-muted f-14">{{ entry.details }}</span>
+                                }
+                                @if (entry.reason) {
+                                <span class="d-block text-muted f-14">{{ entry.reason }}</span>
+                                }
+                            </div>
+                            <div class="text-end">
+                                <span class="d-block f-14 text-muted">{{ entry.occurredAt }}</span>
+                                <span class="d-block f-14 text-muted">{{ entry.actorEmail }}</span>
+                            </div>
+                        </div>
+                    </li>
+                    }
+                </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        @if (balance(); as currentBalance) {
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Saldo</h5>
+            </div>
+            <div class="card-body">
+                <h3 class="mb-1">{{ currentBalance.balance }} {{ currentBalance.currency }}</h3>
+                <p class="text-muted mb-0 f-14">
+                    Total {{ currentBalance.total }} · Pagado {{ currentBalance.paidAmount }}
+                </p>
+            </div>
+        </div>
+        }
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Acciones</h5>
+            </div>
+            <div class="card-body">
+                @if (!canWrite()) {
+                <p class="text-muted mb-0">Su rol solo permite consultar obligaciones.</p>
+                } @else if (!canVoid()) {
+                <p class="text-muted mb-0">La obligación no admite anulación en su estado actual.</p>
+                } @else {
+                @if (!showVoid()) {
+                <button type="button" class="btn btn-outline-danger w-100" [disabled]="working()"
+                    (click)="showVoid.set(true)">Anular obligación</button>
+                } @else {
+                <form [formGroup]="voidForm" (ngSubmit)="voidCharge()" class="border rounded p-3">
+                    <label class="form-label" for="voidReason">Motivo de la anulación *</label>
+                    <textarea id="voidReason" class="form-control mb-2" rows="3" formControlName="reason"
+                        [class.is-invalid]="voidForm.controls.reason.touched && voidForm.controls.reason.invalid"></textarea>
+                    @if (voidForm.controls.reason.touched && voidForm.controls.reason.invalid) {
+                    <div class="invalid-feedback d-block mb-2">Indique el motivo de la anulación.</div>
+                    }
+                    <button type="submit" class="btn btn-danger w-100 mb-2" [disabled]="working()">
+                        Confirmar anulación
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary w-100"
+                        (click)="showVoid.set(false)">Volver</button>
+                </form>
+                }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+}

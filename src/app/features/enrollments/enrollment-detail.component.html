@@ -169,6 +169,12 @@
                     borrador</a>
                 }
                 @if (current.status === 'CONFIRMED') {
+                @if (canGenerateCharge()) {
+                <button type="button" class="btn btn-primary w-100 mb-2" [disabled]="working()"
+                    (click)="generateInitialCharge()">
+                    <i class="ti ti-receipt me-1"></i>Generar cobro inicial
+                </button>
+                }
                 <button type="button" class="btn btn-outline-primary w-100 mb-2" [disabled]="working()"
                     (click)="completeEnrollment()">Marcar como completada</button>
                 }

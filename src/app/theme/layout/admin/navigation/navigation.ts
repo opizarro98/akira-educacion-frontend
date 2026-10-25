@@ -82,6 +82,30 @@ export function navigationFor(roles: string[]): NavigationItem[] {
         icon: 'ti ti-file-description'
       },
       {
+        id: 'billing-charges',
+        title: 'Cobros',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/billing/charges',
+        icon: 'ti ti-receipt'
+      },
+      {
+        id: 'billing-payments',
+        title: 'Pagos',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/billing/payments',
+        icon: 'ti ti-cash'
+      },
+      {
+        id: 'billing-receipts',
+        title: 'Recibos',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/billing/receipts',
+        icon: 'ti ti-file-invoice'
+      },
+      {
         id: 'catalog',
         title: 'Catálogo',
         type: 'item',

@@ -1,10 +1,11 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 
 import { AuthService } from 'src/app/core/services/auth.service';
+import { BillingApiService } from 'src/app/core/services/billing-api.service';
 import { EnrollmentApiService } from 'src/app/core/services/enrollment-api.service';
 import {
     ENROLLMENT_STATUS_LABELS,
@@ -19,9 +20,11 @@ import {
 })
 export class EnrollmentDetailComponent implements OnInit {
     private readonly api = inject(EnrollmentApiService);
+    private readonly billingApi = inject(BillingApiService);
     private readonly auth = inject(AuthService);
     private readonly formBuilder = inject(FormBuilder);
     private readonly route = inject(ActivatedRoute);
+    private readonly router = inject(Router);
 
     readonly enrollmentId = signal('');
     readonly enrollment = signal<Enrollment | null>(null);
@@ -34,6 +37,7 @@ export class EnrollmentDetailComponent implements OnInit {
     readonly showCancel = signal(false);
 
     readonly canWrite = computed(() => this.auth.hasPermission('ENROLLMENT_WRITE'));
+    readonly canGenerateCharge = computed(() => this.auth.hasPermission('CHARGE_WRITE'));
 
     readonly cancelForm = this.formBuilder.nonNullable.group({
         reason: ['', [Validators.required, Validators.maxLength(500)]]
@@ -80,6 +84,27 @@ export class EnrollmentDetailComponent implements OnInit {
             return;
         }
         this.runAction(this.api.complete(this.enrollmentId()), 'Matrícula completada.');
+    }
+
+    generateInitialCharge(): void {
+        if (!window.confirm(
+            '¿Generar el cobro inicial de esta matrícula? Se usará el precio acordado y el IVA congelado al confirmar.'
+        )) {
+            return;
+        }
+        this.error.set('');
+        this.success.set('');
+        this.working.set(true);
+        this.billingApi.generateFromEnrollment(this.enrollmentId()).subscribe({
+            next: (charge) => {
+                this.working.set(false);
+                void this.router.navigate(['/billing/charges', charge.id]);
+            },
+            error: (err: Error) => {
+                this.working.set(false);
+                this.error.set(err.message);
+            }
+        });
     }
 
     cancelEnrollment(): void {

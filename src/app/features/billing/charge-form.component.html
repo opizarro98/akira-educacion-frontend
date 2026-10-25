@@ -1,0 +1,125 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Nueva obligación manual</h5>
+                <a class="btn btn-outline-secondary btn-sm" routerLink="/billing/charges">Volver al listado</a>
+            </div>
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+
+                @if (concepts().length === 0) {
+                <div class="alert alert-warning" role="alert">
+                    No hay conceptos de cobro activos.
+                    <a routerLink="/billing/concepts">Cree un concepto</a> antes de emitir obligaciones.
+                </div>
+                }
+
+                <form [formGroup]="form" (ngSubmit)="save()">
+                    <h6 class="mb-3">Datos de la obligación</h6>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="studentId">Estudiante *</label>
+                            <select id="studentId" class="form-select" formControlName="studentId"
+                                [class.is-invalid]="form.controls.studentId.touched && form.controls.studentId.invalid">
+                                <option value="">Seleccione un estudiante</option>
+                                @for (student of students(); track student.id) {
+                                <option [value]="student.id">{{ student.lastName }}, {{ student.firstName }}</option>
+                                }
+                            </select>
+                            @if (form.controls.studentId.touched && form.controls.studentId.invalid) {
+                            <div class="invalid-feedback">Seleccione un estudiante.</div>
+                            }
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="description">Descripción</label>
+                            <input id="description" class="form-control" formControlName="description"
+                                placeholder="Ej. Pensión de noviembre" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="issueDate">Fecha de emisión *</label>
+                            <input id="issueDate" type="date" class="form-control" formControlName="issueDate" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label" for="dueDate">Fecha de vencimiento *</label>
+                            <input id="dueDate" type="date" class="form-control" formControlName="dueDate" />
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">IVA aplicable</label>
+                            <input class="form-control" [value]="vatRate() + '%'" readonly />
+                            <div class="form-text">Se congela al emitir la obligación.</div>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-3 mt-2">Conceptos y detalles</h6>
+                    <div formArrayName="items">
+                        @for (group of itemsArray.controls; track group; let i = $index) {
+                        <div class="row g-2 align-items-end mb-2" [formGroupName]="i">
+                            <div class="col-md-3">
+                                <label class="form-label" [for]="'concept' + i">Concepto *</label>
+                                <select [id]="'concept' + i" class="form-select" formControlName="conceptId"
+                                    (change)="onConceptSelected(i)">
+                                    <option value="">Seleccione un concepto</option>
+                                    @for (concept of concepts(); track concept.id) {
+                                    <option [value]="concept.id">{{ concept.name }}</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" [for]="'detail' + i">Descripción</label>
+                                <input [id]="'detail' + i" class="form-control" formControlName="description" />
+                            </div>
+                            <div class="col-md-1">
+                                <label class="form-label" [for]="'qty' + i">Cant.</label>
+                                <input [id]="'qty' + i" type="number" class="form-control" formControlName="quantity" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label" [for]="'price' + i">Precio unitario</label>
+                                <input [id]="'price' + i" type="number" step="0.01" class="form-control"
+                                    formControlName="unitPrice" />
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label" [for]="'discount' + i">Descuento</label>
+                                <input [id]="'discount' + i" type="number" step="0.01" class="form-control"
+                                    formControlName="discount" />
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-outline-danger w-100"
+                                    [disabled]="itemsArray.length === 1" (click)="removeItem(i)">
+                                    <i class="ti ti-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm mb-3" (click)="addItem()">
+                        <i class="ti ti-plus me-1"></i>Agregar detalle
+                    </button>
+
+                    <dl class="row border-top pt-3">
+                        <dt class="col-sm-8 text-muted fw-normal">Subtotal</dt>
+                        <dd class="col-sm-4 text-end">{{ subtotalPreview() }}</dd>
+                        <dt class="col-sm-8 text-muted fw-normal">IVA ({{ vatRate() }}%)</dt>
+                        <dd class="col-sm-4 text-end">{{ taxPreview() }}</dd>
+                        <dt class="col-sm-8 fw-bold">Total estimado</dt>
+                        <dd class="col-sm-4 text-end fw-bold">{{ totalPreview() }}</dd>
+                    </dl>
+
+                    <div class="d-block">
+                        <button type="submit" class="btn btn-primary me-2" [disabled]="saving()">
+                            @if (saving()) {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Emitiendo...
+                            } @else {
+                            Emitir obligación
+                            }
+                        </button>
+                        <a class="btn btn-outline-secondary" routerLink="/billing/charges">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
