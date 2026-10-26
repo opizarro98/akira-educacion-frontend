@@ -1,0 +1,145 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Nueva comunicación</h5>
+                    <span class="text-muted f-14">
+                        Prepare el mensaje, revíselo y abra WhatsApp. La plataforma no confirma el envío.
+                    </span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-secondary" routerLink="/communications/templates">
+                        <i class="ti ti-template me-1"></i>Plantillas
+                    </a>
+                    <a class="btn btn-outline-secondary" routerLink="/communications">Historial</a>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+                @if (success()) {
+                <div class="alert alert-success" role="alert">{{ success() }}</div>
+                }
+
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando datos...
+                </div>
+                } @else {
+                <div class="row g-4">
+                    <div class="col-lg-5">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label" for="studentId">Estudiante</label>
+                                <select id="studentId" class="form-select" [ngModel]="studentId()"
+                                    (ngModelChange)="studentId.set($event); onStudentChange()">
+                                    <option value="">Seleccione un estudiante</option>
+                                    @for (student of students(); track student.id) {
+                                    <option [value]="student.id">{{ student.lastName }}, {{ student.firstName }}
+                                    </option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="representativeId">Representante autorizado</label>
+                                <select id="representativeId" class="form-select" [ngModel]="representativeId()"
+                                    (ngModelChange)="representativeId.set($event); clearPreview()"
+                                    [disabled]="representatives().length === 0">
+                                    <option value="">Seleccione un representante</option>
+                                    @for (representative of representatives(); track representative.representativeId) {
+                                    <option [value]="representative.representativeId"
+                                        [disabled]="!representative.authorizedForCommunications">
+                                        {{ representative.fullName }} — {{ representative.phone || 'sin teléfono' }}
+                                        @if (!representative.authorizedForCommunications) { (no autorizado) }
+                                    </option>
+                                    }
+                                </select>
+                                @if (studentId() && representatives().length === 0) {
+                                <div class="text-muted f-14 mt-1">
+                                    El estudiante no tiene representantes asociados.
+                                </div>
+                                }
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="templateId">Plantilla</label>
+                                <select id="templateId" class="form-select" [ngModel]="templateId()"
+                                    (ngModelChange)="templateId.set($event); clearPreview()">
+                                    <option value="">Seleccione una plantilla</option>
+                                    @for (template of templates(); track template.id) {
+                                    <option [value]="template.id">{{ template.name }}</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input id="financialInfo" class="form-check-input" type="checkbox"
+                                        [ngModel]="includeFinancialInfo()"
+                                        (ngModelChange)="includeFinancialInfo.set($event); clearPreview()" />
+                                    <label class="form-check-label" for="financialInfo">
+                                        Incluir información financiera sensible
+                                    </label>
+                                </div>
+                                <div class="text-muted f-14">
+                                    Debe escribir el detalle y revisarlo en la vista previa antes de abrir WhatsApp.
+                                </div>
+                            </div>
+                            @if (includeFinancialInfo()) {
+                            <div class="col-12">
+                                <label class="form-label" for="financialNote">Detalle financiero</label>
+                                <textarea id="financialNote" class="form-control" rows="2" [ngModel]="financialNote()"
+                                    (ngModelChange)="financialNote.set($event); clearPreview()"
+                                    placeholder="Ej.: Saldo pendiente: 100.00"></textarea>
+                            </div>
+                            }
+                            <div class="col-12 d-flex flex-wrap gap-2">
+                                <button class="btn btn-outline-secondary" type="button" [disabled]="previewing()"
+                                    (click)="generatePreview()">
+                                    {{ previewing() ? 'Generando...' : 'Vista previa' }}
+                                </button>
+                                @if (canWrite()) {
+                                <button class="btn btn-outline-secondary" type="button" [disabled]="creating()"
+                                    (click)="saveDraft()">Guardar borrador</button>
+                                <button class="btn btn-primary" type="button" [disabled]="creating()"
+                                    (click)="openWhatsApp()">Abrir WhatsApp</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-7">
+                        @if (preview(); as current) {
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <strong>{{ current.studentName }}</strong>
+                                    <span class="d-block text-muted f-14">
+                                        {{ current.representativeName }} · {{ current.waPhone }}
+                                    </span>
+                                </div>
+                                <span class="badge bg-light-primary">{{ current.templateName }}</span>
+                            </div>
+                            <pre class="bg-light rounded p-3 mb-3"
+                                style="white-space: pre-wrap">{{ current.messageBody }}</pre>
+                            @for (warning of current.warnings; track warning) {
+                            <div class="alert alert-info f-14 mb-2" role="alert">{{ warning }}</div>
+                            }
+                            <a class="f-14 text-break" [href]="current.waLink" target="_blank" rel="noopener">
+                                {{ current.waLink }}
+                            </a>
+                        </div>
+                        } @else {
+                        <div class="text-center text-muted border rounded p-5">
+                            <i class="ti ti-message-circle fs-1 d-block mb-2"></i>
+                            Genere la vista previa para revisar el mensaje exacto y el enlace wa.me.
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

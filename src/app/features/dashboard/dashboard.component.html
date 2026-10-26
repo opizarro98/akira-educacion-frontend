@@ -1,14 +1,31 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-body">
-                <h4 class="mb-1">Bienvenido, {{ auth.user()?.fullName }}</h4>
-                <p class="text-muted mb-0">
-                    {{ auth.roleLabel() }}
-                    @if (auth.user()?.institutionName) {
-                    &middot; {{ auth.user()?.institutionName }}
-                    }
-                </p>
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h4 class="mb-1">Bienvenido, {{ auth.user()?.fullName }}</h4>
+                    <p class="text-muted mb-0">
+                        {{ auth.roleLabel() }}
+                        @if (auth.user()?.institutionName) {
+                        &middot; {{ auth.user()?.institutionName }}
+                        }
+                    </p>
+                </div>
+                @if (!isPlatformAdmin()) {
+                <div class="d-flex align-items-end gap-2">
+                    <div>
+                        <label class="form-label f-14 mb-1" for="from">Desde</label>
+                        <input id="from" type="date" class="form-control" [ngModel]="from()"
+                            (ngModelChange)="from.set($event)" />
+                    </div>
+                    <div>
+                        <label class="form-label f-14 mb-1" for="to">Hasta</label>
+                        <input id="to" type="date" class="form-control" [ngModel]="to()"
+                            (ngModelChange)="to.set($event)" />
+                    </div>
+                    <button class="btn btn-outline-secondary" type="button" (click)="load()">Actualizar</button>
+                </div>
+                }
             </div>
         </div>
     </div>
@@ -18,7 +35,7 @@
 <div class="alert alert-danger" role="alert">{{ error() }}</div>
 }
 
-@if (auth.isPlatformAdmin()) {
+@if (isPlatformAdmin()) {
 <div class="row">
     <div class="col-md-6 col-xl-4">
         <div class="card">
@@ -34,65 +51,164 @@
             <div class="card-body">
                 <h5 class="mb-2">Alcance global</h5>
                 <p class="text-muted mb-0">
-                    Su cuenta de plataforma no pertenece a una institución. Toda operación sobre instituciones
-                    queda registrada en la auditoría.
+                    Su cuenta de plataforma no pertenece a una institución. Puede consultar reportes indicando
+                    explícitamente la institución; cada acceso global queda auditado.
                 </p>
             </div>
         </div>
     </div>
 </div>
-} @else {
+} @else if (loading()) {
+<div class="card">
+    <div class="card-body d-flex align-items-center gap-2 text-muted">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Cargando indicadores...
+    </div>
+</div>
+} @else if (dashboard(); as data) {
 <div class="row">
-    <div class="col-md-12 col-xl-8">
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <span class="text-muted f-14 d-block">Estudiantes activos</span>
+                <strong class="f-24">{{ data.activeStudents }}</strong>
+                <span class="d-block text-muted f-14">{{ data.confirmedEnrollments }} matrícula(s) confirmada(s)</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <span class="text-muted f-14 d-block">Obligaciones pendientes</span>
+                <strong class="f-24">{{ data.outstandingTotal | number:'1.2-2' }}</strong>
+                <span class="d-block text-muted f-14">{{ data.outstandingCharges }} obligación(es) · {{ data.currency
+                    }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <span class="text-muted f-14 d-block">Cartera vencida</span>
+                <strong class="f-24 text-danger">{{ data.overdueTotal | number:'1.2-2' }}</strong>
+                <span class="d-block text-muted f-14">{{ data.overdueCharges }} obligación(es) vencida(s)</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <span class="text-muted f-14 d-block">Saldo de caja</span>
+                <strong class="f-24">{{ data.cashBalance | number:'1.2-2' }}</strong>
+                <span class="d-block text-muted f-14">Saldo acumulado · {{ data.currency }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <span class="text-muted f-14 d-block">Cobros confirmados</span>
+                <strong class="f-24 text-success">{{ data.confirmedPaymentsAmount | number:'1.2-2' }}</strong>
+                <span class="d-block text-muted f-14">{{ data.confirmedPaymentsCount }} pago(s) en el período</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <span class="text-muted f-14 d-block">Egresos</span>
+                <strong class="f-24 text-danger">{{ data.expensesAmount | number:'1.2-2' }}</strong>
+                <span class="d-block text-muted f-14">{{ data.expensesCount }} egreso(s) confirmados</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <span class="text-muted f-14 d-block">Entradas de caja</span>
+                <strong class="f-24">{{ data.cashInflows | number:'1.2-2' }}</strong>
+                <span class="d-block text-muted f-14">Pagos y reversiones del período</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card">
+            <div class="card-body">
+                <span class="text-muted f-14 d-block">Salidas de caja</span>
+                <strong class="f-24">{{ data.cashOutflows | number:'1.2-2' }}</strong>
+                <span class="d-block text-muted f-14">Egresos y reversiones del período</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 col-xl-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Resumen de la institución</h5>
+                <h5 class="mb-0">Cobros por medio de pago</h5>
             </div>
             <div class="card-body">
-                @if (loading()) {
-                <div class="d-flex align-items-center gap-2 text-muted">
-                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                    Cargando información...
-                </div>
-                } @else if (institution(); as inst) {
-                <div class="row">
-                    <div class="col-sm-6 mb-3">
-                        <span class="text-muted d-block f-14">Nombre legal</span>
-                        <strong>{{ inst.legalName }}</strong>
-                    </div>
-                    <div class="col-sm-6 mb-3">
-                        <span class="text-muted d-block f-14">Nombre comercial</span>
-                        <strong>{{ inst.tradeName || 'No definido' }}</strong>
-                    </div>
-                    <div class="col-sm-6 mb-3">
-                        <span class="text-muted d-block f-14">Moneda</span>
-                        <strong>{{ inst.currency }}</strong>
-                    </div>
-                    <div class="col-sm-6 mb-3">
-                        <span class="text-muted d-block f-14">Zona horaria</span>
-                        <strong>{{ inst.timezone }}</strong>
-                    </div>
-                    <div class="col-sm-6 mb-3">
-                        <span class="text-muted d-block f-14">IVA</span>
-                        <strong>
-                            @if (inst.vatEnabled) {
-                            {{ inst.vatRate }}% desde {{ inst.vatEffectiveFrom }}
-                            } @else {
-                            No habilitado
-                            }
-                        </strong>
-                    </div>
-                    <div class="col-sm-6 mb-3">
-                        <span class="text-muted d-block f-14">Módulos habilitados</span>
-                        <strong>{{ inst.modules.length }}</strong>
-                    </div>
-                </div>
-                @if (auth.hasRole('INSTITUTION_ADMIN')) {
-                <a class="btn btn-primary" [routerLink]="['/institution/settings']">Editar configuración</a>
-                }
+                @if (paymentsChart(); as options) {
+                <apx-chart [series]="options.series!" [chart]="options.chart!" [labels]="options.labels!"
+                    [colors]="options.colors!" [dataLabels]="options.dataLabels!" [legend]="options.legend!"
+                    [tooltip]="options.tooltip!" />
                 } @else {
-                <p class="text-muted mb-0">No se pudo cargar la información de la institución.</p>
+                <p class="text-muted mb-0">Sin cobros confirmados en el período.</p>
                 }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12 col-xl-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Egresos por categoría</h5>
+            </div>
+            <div class="card-body">
+                @if (expensesChart(); as options) {
+                <apx-chart [series]="options.series!" [chart]="options.chart!" [xaxis]="options.xaxis!"
+                    [plotOptions]="options.plotOptions!" [colors]="options.colors!" [dataLabels]="options.dataLabels!"
+                    [tooltip]="options.tooltip!" />
+                } @else {
+                <p class="text-muted mb-0">Sin egresos confirmados en el período.</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12 col-xl-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Caja de los últimos seis meses</h5>
+            </div>
+            <div class="card-body">
+                @if (cashChart(); as options) {
+                <apx-chart [series]="options.series!" [chart]="options.chart!" [xaxis]="options.xaxis!"
+                    [colors]="options.colors!" [dataLabels]="options.dataLabels!" [legend]="options.legend!"
+                    [tooltip]="options.tooltip!" />
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div>
+                    <span class="text-muted f-14 d-block">
+                        Período {{ data.fromDate }} — {{ data.toDate }} · {{ data.timezone }} · {{ data.currency }}
+                    </span>
+                    <strong>{{ data.institutionName }}</strong>
+                </div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-secondary" routerLink="/finance/reports">Ver reportes</a>
+                    <a class="btn btn-outline-secondary" routerLink="/finance/expenses">Egresos</a>
+                    <a class="btn btn-outline-secondary" routerLink="/finance/cash-movements">Caja</a>
+                </div>
             </div>
         </div>
     </div>

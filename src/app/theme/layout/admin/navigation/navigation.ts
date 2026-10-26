@@ -106,6 +106,38 @@ export function navigationFor(roles: string[]): NavigationItem[] {
         icon: 'ti ti-file-invoice'
       },
       {
+        id: 'finance-expenses',
+        title: 'Egresos',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/finance/expenses',
+        icon: 'ti ti-receipt-2'
+      },
+      {
+        id: 'finance-cash',
+        title: 'Caja',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/finance/cash-movements',
+        icon: 'ti ti-cash-banknote'
+      },
+      {
+        id: 'finance-reports',
+        title: 'Reportes',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/finance/reports',
+        icon: 'ti ti-chart-bar'
+      },
+      {
+        id: 'communications',
+        title: 'Comunicaciones',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/communications',
+        icon: 'ti ti-message-circle'
+      },
+      {
         id: 'catalog',
         title: 'Catálogo',
         type: 'item',
@@ -114,6 +146,17 @@ export function navigationFor(roles: string[]): NavigationItem[] {
         icon: 'ti ti-list-details'
       }
     );
+  }
+
+  if (roles.includes('INSTITUTION_ADMIN') || roles.includes('SECRETARY')) {
+    items.push({
+      id: 'student-import',
+      title: 'Importar estudiantes',
+      type: 'item',
+      classes: 'nav-item',
+      url: '/imports/students',
+      icon: 'ti ti-file-import'
+    });
   }
 
   return items;

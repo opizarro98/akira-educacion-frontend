@@ -1,0 +1,125 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Egresos</h5>
+                    <span class="text-muted f-14">{{ totalElements() }} egreso(s) registrados</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-secondary" routerLink="/finance/expense-categories">
+                        <i class="ti ti-category me-1"></i>Categorías
+                    </a>
+                    <a class="btn btn-outline-secondary" routerLink="/finance/cash-movements">
+                        <i class="ti ti-cash-banknote me-1"></i>Caja
+                    </a>
+                    @if (canWrite()) {
+                    <a class="btn btn-primary" routerLink="/finance/expenses/new">
+                        <i class="ti ti-plus me-1"></i>Registrar egreso
+                    </a>
+                    }
+                </div>
+            </div>
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+
+                <div class="row mb-3 g-2">
+                    <div class="col-md-3">
+                        <select class="form-select" [ngModel]="status()" (ngModelChange)="status.set($event)">
+                            <option value="">Todos los estados</option>
+                            @for (option of statuses; track option.value) {
+                            <option [value]="option.value">{{ option.label }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" [ngModel]="categoryId()" (ngModelChange)="categoryId.set($event)">
+                            <option value="">Todas las categorías</option>
+                            @for (category of categories(); track category.id) {
+                            <option [value]="category.id">{{ category.name }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label f-14 mb-1" for="from">Desde</label>
+                        <input id="from" type="date" class="form-control" [ngModel]="from()"
+                            (ngModelChange)="from.set($event)" />
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label f-14 mb-1" for="to">Hasta</label>
+                        <input id="to" type="date" class="form-control" [ngModel]="to()"
+                            (ngModelChange)="to.set($event)" />
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end gap-2">
+                        <button class="btn btn-outline-secondary" type="button"
+                            (click)="applyFilters()">Filtrar</button>
+                        <button class="btn btn-outline-secondary" type="button"
+                            (click)="clearFilters()">Limpiar</button>
+                    </div>
+                </div>
+
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando egresos...
+                </div>
+                } @else if (expenses().length === 0) {
+                <div class="text-center text-muted py-5">
+                    <i class="ti ti-receipt-2 fs-1 d-block mb-2"></i>
+                    No hay egresos que coincidan con los filtros.
+                </div>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Categoría</th>
+                                <th>Descripción</th>
+                                <th>Beneficiario</th>
+                                <th>Medio</th>
+                                <th class="text-end">Importe</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (expense of expenses(); track expense.id) {
+                            <tr>
+                                <td>{{ expense.expenseDate }}</td>
+                                <td>{{ expense.categoryName }}</td>
+                                <td>{{ expense.description }}</td>
+                                <td>{{ expense.beneficiary || '—' }}</td>
+                                <td>{{ methodLabel(expense.method) }}</td>
+                                <td class="text-end">{{ expense.amount }} {{ expense.currency }}</td>
+                                <td>
+                                    <span class="badge" [class]="statusClass(expense.status)">
+                                        {{ statusLabel(expense.status) }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-secondary"
+                                        [routerLink]="['/finance/expenses', expense.id]">Ver</a>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="text-muted f-14">Página {{ page() + 1 }} de {{ totalPages() || 1 }}</span>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="page() === 0"
+                            (click)="previousPage()">Anterior</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                            [disabled]="page() + 1 >= totalPages()" (click)="nextPage()">Siguiente</button>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,117 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Plantillas de mensajes</h5>
+                    <span class="text-muted f-14">Textos reutilizables para comunicaciones asistidas</span>
+                </div>
+                <a class="btn btn-outline-secondary" routerLink="/communications">
+                    <i class="ti ti-arrow-left me-1"></i>Volver a comunicaciones
+                </a>
+            </div>
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+                @if (success()) {
+                <div class="alert alert-success" role="alert">{{ success() }}</div>
+                }
+
+                @if (canWrite()) {
+                <form [formGroup]="form" (ngSubmit)="save()" class="mb-4">
+                    <div class="row g-2">
+                        <div class="col-md-2">
+                            <label class="form-label f-14 mb-1" for="code">Código</label>
+                            <input id="code" class="form-control" formControlName="code" placeholder="AVISO" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label f-14 mb-1" for="name">Nombre</label>
+                            <input id="name" class="form-control" formControlName="name" placeholder="Aviso general" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label f-14 mb-1">Marcadores</label>
+                            <div class="d-flex flex-wrap gap-1">
+                                @for (placeholder of placeholders; track placeholder) {
+                                <button class="btn btn-sm btn-outline-secondary" type="button"
+                                    (click)="insertPlaceholder(placeholder)">
+                                    {{ placeholder }}
+                                </button>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label f-14 mb-1" for="body">Mensaje</label>
+                            <textarea id="body" class="form-control" rows="4" formControlName="body"
+                                placeholder="Escriba el mensaje y agregue marcadores con los botones superiores"></textarea>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button class="btn btn-primary" type="submit" [disabled]="saving()">
+                                {{ editingId() ? 'Guardar cambios' : 'Crear plantilla' }}
+                            </button>
+                            @if (editingId()) {
+                            <button class="btn btn-outline-secondary" type="button" (click)="cancel()">Cancelar</button>
+                            }
+                        </div>
+                    </div>
+                </form>
+                }
+
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando plantillas...
+                </div>
+                } @else if (templates().length === 0) {
+                <div class="text-center text-muted py-5">
+                    <i class="ti ti-template fs-1 d-block mb-2"></i>
+                    Todavía no hay plantillas.
+                </div>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Mensaje</th>
+                                <th>Estado</th>
+                                @if (canWrite()) {
+                                <th class="text-end">Acciones</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (template of templates(); track template.id) {
+                            <tr>
+                                <td>{{ template.code || '—' }}</td>
+                                <td class="fw-medium">{{ template.name }}</td>
+                                <td class="text-muted f-14">{{ template.body }}</td>
+                                <td>
+                                    <span class="badge"
+                                        [class]="template.active ? 'bg-light-success' : 'bg-light-danger'">
+                                        {{ template.active ? 'Activa' : 'Inactiva' }}
+                                    </span>
+                                </td>
+                                @if (canWrite()) {
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-secondary me-1" type="button"
+                                        (click)="edit(template)">
+                                        Editar
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button"
+                                        (click)="toggleActive(template)">
+                                        {{ template.active ? 'Desactivar' : 'Activar' }}
+                                    </button>
+                                </td>
+                                }
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

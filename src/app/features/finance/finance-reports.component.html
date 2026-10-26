@@ -1,0 +1,415 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Reportes financieros</h5>
+                    <span class="text-muted f-14">
+                        Devengado y cobrado se informan por separado; las obligaciones no son dinero recibido.
+                    </span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-outline-secondary" routerLink="/finance/expenses">
+                        <i class="ti ti-receipt-2 me-1"></i>Egresos
+                    </a>
+                    <a class="btn btn-outline-secondary" routerLink="/finance/cash-movements">
+                        <i class="ti ti-cash-banknote me-1"></i>Caja
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+
+                <div class="row g-2 mb-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label f-14 mb-1" for="from">Desde</label>
+                        <input id="from" type="date" class="form-control" [ngModel]="from()"
+                            (ngModelChange)="from.set($event)" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label f-14 mb-1" for="to">Hasta</label>
+                        <input id="to" type="date" class="form-control" [ngModel]="to()"
+                            (ngModelChange)="to.set($event)" />
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-secondary w-100" type="button" (click)="applyPeriod()">
+                            Consultar período
+                        </button>
+                    </div>
+                </div>
+
+                @if (header(); as meta) {
+                <div class="border rounded p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <span class="text-muted f-14 d-block">Institución</span>
+                            <strong>{{ meta.institutionName }}</strong>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <span class="text-muted f-14 d-block">Período</span>
+                            <strong>{{ meta.fromDate }} — {{ meta.toDate }}</strong>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <span class="text-muted f-14 d-block">Zona horaria / moneda</span>
+                            <strong>{{ meta.timezone }} · {{ meta.currency }}</strong>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <span class="text-muted f-14 d-block">Devengado</span>
+                            <strong>{{ meta.accrued }}</strong>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <span class="text-muted f-14 d-block">Cobrado</span>
+                            <strong>{{ meta.collected }}</strong>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <span class="text-muted f-14 d-block">Diferencia</span>
+                            <strong>{{ meta.difference }}</strong>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <span class="text-muted f-14 d-block">Anulaciones</span>
+                            <strong>{{ meta.includesVoids ? 'Incluidas' : 'Excluidas' }}</strong>
+                        </div>
+                    </div>
+                </div>
+                }
+
+                <ul class="nav nav-tabs mb-3">
+                    @for (item of tabs; track item.value) {
+                    <li class="nav-item">
+                        <button class="nav-link" type="button" [class.active]="tab() === item.value"
+                            (click)="selectTab(item.value)">
+                            {{ item.label }}
+                        </button>
+                    </li>
+                    }
+                </ul>
+
+                @if (loading()) {
+                <div class="d-flex align-items-center gap-2 text-muted">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Cargando reporte...
+                </div>
+                } @else {
+                @switch (tab()) {
+                @case ('confirmed') {
+                @if (confirmed(); as report) {
+                <div class="d-flex gap-4 mb-3">
+                    <div>
+                        <span class="text-muted f-14 d-block">Total cobrado</span>
+                        <strong class="f-20">{{ report.totalAmount }} {{ report.header.currency }}</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted f-14 d-block">Pagos</span>
+                        <strong class="f-20">{{ report.paymentCount }}</strong>
+                    </div>
+                </div>
+                <h6>Totales por medio de pago</h6>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Medio</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (total of report.byMethod; track total.method) {
+                            <tr>
+                                <td>{{ methodLabel(total.method) }}</td>
+                                <td class="text-end">{{ total.count }}</td>
+                                <td class="text-end">{{ total.amount }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <h6>Pagos confirmados</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Recepción</th>
+                                <th>Medio</th>
+                                <th>Referencia</th>
+                                <th class="text-end">Importe</th>
+                                <th>Confirmado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of report.rows; track row.id) {
+                            <tr>
+                                <td>{{ row.studentName }}</td>
+                                <td>{{ row.receivedDate }}</td>
+                                <td>{{ methodLabel(row.method) }}</td>
+                                <td>{{ row.reference || '—' }}</td>
+                                <td class="text-end">{{ row.amount }} {{ row.currency }}</td>
+                                <td>{{ row.confirmedAt || '—' }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+                }
+                @case ('pending') {
+                @if (pending(); as report) {
+                <div class="d-flex gap-4 mb-3">
+                    <div>
+                        <span class="text-muted f-14 d-block">Pendiente de verificación</span>
+                        <strong class="f-20">{{ report.totalAmount }} {{ report.header.currency }}</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted f-14 d-block">Pagos</span>
+                        <strong class="f-20">{{ report.paymentCount }}</strong>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Recepción</th>
+                                <th>Medio</th>
+                                <th>Referencia</th>
+                                <th class="text-end">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of report.rows; track row.id) {
+                            <tr>
+                                <td><a [routerLink]="['/billing/payments', row.id]">{{ row.studentName }}</a></td>
+                                <td>{{ row.receivedDate }}</td>
+                                <td>{{ methodLabel(row.method) }}</td>
+                                <td>{{ row.reference || '—' }}</td>
+                                <td class="text-end">{{ row.amount }} {{ row.currency }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+                }
+                @case ('voided') {
+                @if (voided(); as report) {
+                <div class="d-flex gap-4 mb-3">
+                    <div>
+                        <span class="text-muted f-14 d-block">Anulado en el período</span>
+                        <strong class="f-20">{{ report.totalAmount }} {{ report.header.currency }}</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted f-14 d-block">Pagos</span>
+                        <strong class="f-20">{{ report.paymentCount }}</strong>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Recepción</th>
+                                <th>Anulado</th>
+                                <th>Motivo</th>
+                                <th class="text-end">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of report.rows; track row.id) {
+                            <tr>
+                                <td><a [routerLink]="['/billing/payments', row.id]">{{ row.studentName }}</a></td>
+                                <td>{{ row.receivedDate }}</td>
+                                <td>{{ row.voidedAt || '—' }}</td>
+                                <td>{{ row.voidReason || '—' }}</td>
+                                <td class="text-end">{{ row.amount }} {{ row.currency }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+                }
+                @case ('outstanding') {
+                @if (outstanding(); as report) {
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Saldo pendiente</span>
+                            <strong class="f-20">{{ report.totalOutstanding }} {{ report.header.currency }}</strong>
+                            <span class="d-block text-muted f-14">{{ report.outstandingCount }} obligación(es)</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Cartera vencida</span>
+                            <strong class="f-20 text-danger">{{ report.overdueOutstanding }} {{ report.header.currency
+                                }}</strong>
+                            <span class="d-block text-muted f-14">{{ report.overdueCount }} obligación(es)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>Emisión</th>
+                                <th>Vence</th>
+                                <th class="text-end">Total</th>
+                                <th class="text-end">Pagado</th>
+                                <th class="text-end">Saldo</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of report.rows; track row.chargeId) {
+                            <tr>
+                                <td><a [routerLink]="['/billing/charges', row.chargeId]">{{ row.studentName }}</a></td>
+                                <td>{{ row.issueDate }}</td>
+                                <td>{{ row.dueDate }}</td>
+                                <td class="text-end">{{ row.total }} {{ row.currency }}</td>
+                                <td class="text-end">{{ row.paidAmount }}</td>
+                                <td class="text-end">{{ row.balance }}</td>
+                                <td>
+                                    @if (row.overdue) {
+                                    <span class="badge bg-light-danger">Vencida ({{ row.daysOverdue }} días)</span>
+                                    } @else {
+                                    <span class="badge bg-light-warning">Vigente</span>
+                                    }
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+                }
+                @case ('expenses') {
+                @if (expenses(); as report) {
+                <div class="d-flex gap-4 mb-3">
+                    <div>
+                        <span class="text-muted f-14 d-block">Total egresos confirmados</span>
+                        <strong class="f-20">{{ report.totalAmount }} {{ report.header.currency }}</strong>
+                    </div>
+                    <div>
+                        <span class="text-muted f-14 d-block">Egresos</span>
+                        <strong class="f-20">{{ report.expenseCount }}</strong>
+                    </div>
+                </div>
+                <h6>Totales por categoría</h6>
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Categoría</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (total of report.byCategory; track total.categoryId) {
+                            <tr>
+                                <td>{{ total.categoryName }}</td>
+                                <td class="text-end">{{ total.count }}</td>
+                                <td class="text-end">{{ total.amount }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <h6>Egresos confirmados</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Categoría</th>
+                                <th>Descripción</th>
+                                <th>Beneficiario</th>
+                                <th class="text-end">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of report.rows; track row.id) {
+                            <tr>
+                                <td><a [routerLink]="['/finance/expenses', row.id]">{{ row.expenseDate }}</a></td>
+                                <td>{{ row.categoryName }}</td>
+                                <td>{{ row.description }}</td>
+                                <td>{{ row.beneficiary || '—' }}</td>
+                                <td class="text-end">{{ row.amount }} {{ row.currency }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+                }
+                @case ('cash') {
+                @if (cashSummary(); as summary) {
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Entradas</span>
+                            <strong class="f-20 text-success">{{ summary.inflows }} {{ summary.header.currency
+                                }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Salidas</span>
+                            <strong class="f-20 text-danger">{{ summary.outflows }} {{ summary.header.currency
+                                }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Neto</span>
+                            <strong class="f-20">{{ summary.net }} {{ summary.header.currency }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Movimientos</span>
+                            <strong class="f-20">{{ summary.movementCount }}</strong>
+                        </div>
+                    </div>
+                </div>
+                }
+                @if (cashFlow(); as report) {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Descripción</th>
+                                <th class="text-end">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (movement of report.movements; track movement.id) {
+                            <tr>
+                                <td>{{ movement.occurredAt }}</td>
+                                <td>
+                                    <span class="badge"
+                                        [class]="movement.direction === 'IN' ? 'bg-light-success' : 'bg-light-danger'">
+                                        {{ movement.movementType }}
+                                    </span>
+                                </td>
+                                <td>{{ movement.description || '—' }}</td>
+                                <td class="text-end">{{ movement.signedAmount }} {{ movement.currency }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+                }
+                }
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,290 @@
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0">Importar estudiantes desde Excel</h5>
+                    <span class="text-muted f-14">
+                        La vista previa valida el archivo sin crear estudiantes. Solo la confirmación los importa.
+                    </span>
+                </div>
+                <a class="btn btn-outline-secondary" routerLink="/students">
+                    <i class="ti ti-users me-1"></i>Estudiantes
+                </a>
+            </div>
+            <div class="card-body">
+                @if (error()) {
+                <div class="alert alert-danger" role="alert">{{ error() }}</div>
+                }
+                @if (success()) {
+                <div class="alert alert-success" role="alert">{{ success() }}</div>
+                }
+
+                @if (!canWrite()) {
+                <div class="alert alert-warning" role="alert">
+                    Su rol no permite importar estudiantes. Puede consultar el historial desde la API.
+                </div>
+                }
+
+                @switch (stage()) {
+                @case ('upload') {
+                <div class="row">
+                    <div class="col-lg-7">
+                        <div class="border rounded p-4">
+                            <h6>1. Cargar archivo</h6>
+                            <p class="text-muted f-14">
+                                Formato permitido: <strong>.xlsx</strong>, máximo 5 MB. Columnas obligatorias:
+                                <strong>Nombres</strong>, <strong>Apellidos</strong> y
+                                <strong>Fecha de ingreso</strong> (AAAA-MM-DD).
+                            </p>
+                            <input class="form-control mb-2" type="file" accept=".xlsx"
+                                (change)="onFileSelected($event)" />
+                            @if (selectedFile(); as file) {
+                            <div class="text-muted f-14 mb-2">
+                                {{ file.name }} · {{ fileSizeLabel(file.size) }}
+                            </div>
+                            }
+                            <button class="btn btn-primary" type="button" [disabled]="busy() || !canWrite()"
+                                (click)="upload()">
+                                {{ busy() ? 'Validando...' : 'Validar archivo' }}
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="border rounded p-4">
+                            <h6>Columnas opcionales</h6>
+                            <ul class="text-muted f-14 mb-0">
+                                <li>Identificación</li>
+                                <li>Fecha de nacimiento</li>
+                                <li>Correo</li>
+                                <li>Teléfono</li>
+                                <li>Estado</li>
+                                <li>Dirección</li>
+                            </ul>
+                            <hr />
+                            <p class="text-muted f-14 mb-0">
+                                La institución se toma del usuario autenticado; nunca del archivo.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                }
+
+                @case ('preview') {
+                @if (previewData(); as preview) {
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Archivo</span>
+                            <strong class="f-16 text-break">{{ preview.fileName }}</strong>
+                            <span class="d-block text-muted f-14">{{ fileSizeLabel(preview.fileSize) }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Filas</span>
+                            <strong class="f-20">{{ preview.totalRows }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Válidas</span>
+                            <strong class="f-20 text-success">{{ preview.validRows }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Con errores</span>
+                            <strong class="f-20 text-danger">{{ preview.errorRows }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="border rounded p-3">
+                            <span class="text-muted f-14 d-block">Duplicadas</span>
+                            <strong class="f-20 text-warning">{{ preview.duplicateRows }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info f-14" role="alert">
+                    Esta vista previa <strong>no ha creado estudiantes</strong>. Revise los errores y duplicados
+                    antes de confirmar.
+                </div>
+
+                @if (errorRows().length > 0) {
+                <h6 class="mt-4">Filas con errores</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Fila</th>
+                                <th>Estudiante</th>
+                                <th>Identificación</th>
+                                <th>Errores</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of errorRows(); track row.rowNumber) {
+                            <tr>
+                                <td>{{ row.rowNumber }}</td>
+                                <td>{{ fullName(row) }}</td>
+                                <td>{{ row.documentNumber || '—' }}</td>
+                                <td class="text-danger f-14">
+                                    @for (message of row.errors; track message) {
+                                    <span class="d-block">{{ message }}</span>
+                                    }
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+
+                @if (duplicateRows().length > 0) {
+                <h6 class="mt-4">Posibles duplicados</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Fila</th>
+                                <th>Estudiante</th>
+                                <th>Identificación</th>
+                                <th>Estado</th>
+                                <th>Criterio</th>
+                                <th>Estudiante existente</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of duplicateRows(); track row.rowNumber) {
+                            <tr>
+                                <td>{{ row.rowNumber }}</td>
+                                <td>{{ fullName(row) }}</td>
+                                <td>{{ row.documentNumber || '—' }}</td>
+                                <td>
+                                    <span class="badge" [class]="rowStatusClass(row.rowStatus)">
+                                        {{ rowStatusLabel(row.rowStatus) }}
+                                    </span>
+                                </td>
+                                <td>{{ duplicateTypeLabel(row.duplicateType) }}</td>
+                                <td class="text-muted f-14">{{ row.existingStudentId || '—' }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+
+                <h6 class="mt-4">Filas válidas que se crearán</h6>
+                @if (validRows().length === 0) {
+                <p class="text-muted">No hay filas válidas para importar.</p>
+                } @else {
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Fila</th>
+                                <th>Nombres</th>
+                                <th>Apellidos</th>
+                                <th>Identificación</th>
+                                <th>Nacimiento</th>
+                                <th>Ingreso</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of validRows(); track row.rowNumber) {
+                            <tr>
+                                <td>{{ row.rowNumber }}</td>
+                                <td>{{ row.firstName }}</td>
+                                <td>{{ row.lastName }}</td>
+                                <td>{{ row.documentNumber || '—' }}</td>
+                                <td>{{ row.birthDate || '—' }}</td>
+                                <td>{{ row.admissionDate }}</td>
+                                <td>{{ row.studentStatus || 'PRE_REGISTERED' }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+
+                <div class="border-top pt-3 mt-3">
+                    @if (preview.duplicateRows > 0) {
+                    <div class="form-check mb-2">
+                        <input id="allowUpdate" class="form-check-input" type="checkbox"
+                            [ngModel]="allowUpdateExisting()" (ngModelChange)="allowUpdateExisting.set($event)" />
+                        <label class="form-check-label" for="allowUpdate">
+                            Actualizar explícitamente los estudiantes existentes que coincidan
+                        </label>
+                    </div>
+                    }
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" type="button" [disabled]="busy()" (click)="confirm()">
+                            {{ busy() ? 'Importando...' : 'Confirmar importación' }}
+                        </button>
+                        <button class="btn btn-outline-secondary" type="button" [disabled]="busy()"
+                            (click)="cancelPreview()">Cancelar</button>
+                    </div>
+                </div>
+                }
+                }
+
+                @case ('result') {
+                @if (resultData(); as result) {
+                <div class="alert alert-success" role="alert">
+                    Importación finalizada: {{ result.importedRows }} estudiante(s) creado(s),
+                    {{ result.updatedRows }} actualizado(s), {{ result.errorRows }} fila(s) con errores y
+                    {{ result.duplicateRows }} duplicado(s).
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Fila</th>
+                                <th>Estudiante</th>
+                                <th>Identificación</th>
+                                <th>Resultado</th>
+                                <th>Errores</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (row of result.rows; track row.rowNumber) {
+                            <tr>
+                                <td>{{ row.rowNumber }}</td>
+                                <td>{{ fullName(row) }}</td>
+                                <td>{{ row.documentNumber || '—' }}</td>
+                                <td>
+                                    @if (row.createdStudentId && row.updatedExisting) {
+                                    <span class="badge bg-light-primary">Actualizado</span>
+                                    } @else if (row.createdStudentId) {
+                                    <span class="badge bg-light-success">Creado</span>
+                                    } @else {
+                                    <span class="badge" [class]="rowStatusClass(row.rowStatus)">
+                                        {{ rowStatusLabel(row.rowStatus) }}
+                                    </span>
+                                    }
+                                </td>
+                                <td class="text-danger f-14">
+                                    @for (message of row.errors; track message) {
+                                    <span class="d-block">{{ message }}</span>
+                                    }
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <a class="btn btn-primary" routerLink="/students">Ver estudiantes</a>
+                    <button class="btn btn-outline-secondary" type="button" (click)="reset()">
+                        Nueva importación
+                    </button>
+                </div>
+                }
+                }
+                }
+            </div>
+        </div>
+    </div>
+</div>
