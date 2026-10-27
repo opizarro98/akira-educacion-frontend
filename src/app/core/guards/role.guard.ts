@@ -15,7 +15,9 @@ export const roleGuard = (roles: string[]): CanActivateFn => {
         if (!auth.isAuthenticated()) {
             return router.createUrlTree(['/login']);
         }
-        if (auth.hasAnyRole(roles)) {
+        // PLATFORM_ADMIN tiene alcance global explícito; el backend sigue
+        // validando permisos e institución en cada operación.
+        if (auth.hasAnyRole(roles) || auth.isPlatformAdmin()) {
             return true;
         }
         return router.createUrlTree([auth.homeRoute()]);

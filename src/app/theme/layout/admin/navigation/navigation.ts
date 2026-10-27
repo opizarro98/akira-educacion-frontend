@@ -32,7 +32,9 @@ export function navigationFor(roles: string[]): NavigationItem[] {
     }
   ];
 
-  if (roles.includes('PLATFORM_ADMIN')) {
+  const isPlatformAdmin = roles.includes('PLATFORM_ADMIN');
+
+  if (isPlatformAdmin) {
     items.push({
       id: 'platform-institutions',
       title: 'Instituciones',
@@ -54,8 +56,19 @@ export function navigationFor(roles: string[]): NavigationItem[] {
     });
   }
 
+  if (isPlatformAdmin || roles.includes('INSTITUTION_ADMIN')) {
+    items.push({
+      id: 'users',
+      title: 'Usuarios',
+      type: 'item',
+      classes: 'nav-item',
+      url: '/users',
+      icon: 'ti ti-users-group'
+    });
+  }
+
   const institutionRoles = ['INSTITUTION_ADMIN', 'SECRETARY', 'TREASURY', 'DIRECTOR'];
-  if (roles.some((role) => institutionRoles.includes(role))) {
+  if (isPlatformAdmin || roles.some((role) => institutionRoles.includes(role))) {
     items.push(
       {
         id: 'students',
@@ -148,7 +161,7 @@ export function navigationFor(roles: string[]): NavigationItem[] {
     );
   }
 
-  if (roles.includes('INSTITUTION_ADMIN') || roles.includes('SECRETARY')) {
+  if (isPlatformAdmin || roles.includes('INSTITUTION_ADMIN') || roles.includes('SECRETARY')) {
     items.push({
       id: 'student-import',
       title: 'Importar estudiantes',

@@ -7,10 +7,11 @@ import { SHARED_IMPORTS } from 'src/app/theme/shared/shared.module';
 
 // project import
 import { AuthService } from 'src/app/core/services/auth.service';
+import { InstitutionSelectorComponent } from './institution-selector.component';
 
 @Component({
   selector: 'app-nav-right',
-  imports: [...SHARED_IMPORTS, RouterModule],
+  imports: [...SHARED_IMPORTS, RouterModule, InstitutionSelectorComponent],
   templateUrl: './nav-right.component.html',
   styleUrl: './nav-right.component.scss'
 })

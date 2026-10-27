@@ -42,7 +42,7 @@ export class ExpenseListComponent implements OnInit {
     readonly appliedFrom = signal('');
     readonly appliedTo = signal('');
 
-    readonly canWrite = computed(() => this.auth.hasPermission('EXPENSE_WRITE'));
+    readonly canCreate = computed(() => this.auth.hasPermission('EXPENSE_CREATE'));
     readonly statuses = Object.entries(EXPENSE_STATUS_LABELS).map(([value, label]) => ({
         value: value as ExpenseStatus,
         label

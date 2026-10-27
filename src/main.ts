@@ -7,6 +7,8 @@ import { AppRoutingModule } from './app/app-routing.module';
 import { AppComponent } from './app/app.component';
 import { jwtInterceptor } from './app/core/interceptors/jwt.interceptor';
 import { errorInterceptor } from './app/core/interceptors/error.interceptor';
+import { activityInterceptor } from './app/core/interceptors/activity.interceptor';
+import { institutionContextInterceptor } from './app/core/interceptors/institution-context.interceptor';
 
 if (environment.production) {
   enableProdMode();
@@ -15,6 +17,13 @@ if (environment.production) {
 bootstrapApplication(AppComponent, {
   providers: [
     importProvidersFrom(BrowserModule, AppRoutingModule),
-    provideHttpClient(withInterceptors([jwtInterceptor, errorInterceptor]))
+    provideHttpClient(
+      withInterceptors([
+        jwtInterceptor,
+        institutionContextInterceptor,
+        activityInterceptor,
+        errorInterceptor
+      ])
+    )
   ]
 }).catch((err) => console.error(err));

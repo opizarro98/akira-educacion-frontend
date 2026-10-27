@@ -4,6 +4,7 @@ import { AdminComponent } from './theme/layout/admin/admin.component';
 import { GuestComponent } from './theme/layout/guest/guest.component';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
+import { institutionContextGuard } from './core/guards/institution-context.guard';
 
 const appRoutes: Routes = [
   {
@@ -20,7 +21,7 @@ const appRoutes: Routes = [
   {
     path: '',
     component: AdminComponent,
-    canActivate: [authGuard],
+    canActivate: [authGuard, institutionContextGuard],
     children: [
       {
         path: '',
@@ -47,6 +48,12 @@ const appRoutes: Routes = [
           import('./features/institution/settings/institution-settings.component').then(
             (c) => c.InstitutionSettingsComponent
           )
+      },
+      {
+        path: 'users',
+        canActivate: [roleGuard(['INSTITUTION_ADMIN', 'PLATFORM_ADMIN'])],
+        loadComponent: () =>
+          import('./features/users/user-list.component').then((c) => c.UserListComponent)
       },
       {
         path: 'students',

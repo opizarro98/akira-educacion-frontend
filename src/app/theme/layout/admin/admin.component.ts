@@ -1,5 +1,5 @@
 // Angular import
-import { AfterViewInit, Component, effect, inject } from '@angular/core';
+import { AfterViewInit, Component, OnInit, effect, inject } from '@angular/core';
 import { CommonModule, Location, LocationStrategy } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ChangeDetectorRef } from '@angular/core';
@@ -9,6 +9,7 @@ import { NavBarComponent } from './nav-bar/nav-bar.component';
 import { NavigationComponent } from './navigation/navigation.component';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumbs/breadcrumbs.component';
 import { ConfigService } from '../../shared/service/config.service';
+import { InstitutionContextService } from 'src/app/core/services/institution-context.service';
 
 @Component({
   selector: 'app-admin',
@@ -16,11 +17,12 @@ import { ConfigService } from '../../shared/service/config.service';
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
-export class AdminComponent implements AfterViewInit {
+export class AdminComponent implements OnInit, AfterViewInit {
   private location = inject(Location);
   private locationStrategy = inject(LocationStrategy);
   cdr = inject(ChangeDetectorRef);
   private layoutState = inject(ConfigService);
+  private institutionContext = inject(InstitutionContextService);
 
   // public props
   currentLayout!: string;
@@ -37,6 +39,10 @@ export class AdminComponent implements AfterViewInit {
   }
 
   // life cycle hook
+
+  ngOnInit(): void {
+    this.institutionContext.init();
+  }
 
   ngAfterViewInit() {
     this.windowWidth = window.innerWidth;

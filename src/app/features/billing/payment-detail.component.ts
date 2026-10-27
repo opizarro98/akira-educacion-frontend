@@ -52,6 +52,7 @@ export class PaymentDetailComponent implements OnInit {
 
     readonly canVerify = computed(() => this.auth.hasPermission('PAYMENT_VERIFY'));
     readonly canApply = computed(() => this.auth.hasPermission('PAYMENT_APPLY'));
+    readonly canReverse = computed(() => this.auth.hasPermission('PAYMENT_REVERSE'));
     readonly canVoid = computed(() => this.auth.hasPermission('PAYMENT_VOID'));
 
     readonly voidForm = this.formBuilder.nonNullable.group({

@@ -144,7 +144,7 @@
                                     }
                                 </td>
                                 <td class="text-end">
-                                    @if (canApply() && !allocation.reversed) {
+                                    @if (canReverse() && !allocation.reversed) {
                                     <button class="btn btn-sm btn-outline-danger" type="button" [disabled]="working()"
                                         (click)="startReverse(allocation.id)">
                                         Revertir

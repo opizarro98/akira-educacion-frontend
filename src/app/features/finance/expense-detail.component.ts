@@ -34,7 +34,9 @@ export class ExpenseDetailComponent implements OnInit {
     readonly success = signal('');
     readonly showVoid = signal(false);
 
-    readonly canWrite = computed(() => this.auth.hasPermission('EXPENSE_WRITE'));
+    readonly canUpdate = computed(() => this.auth.hasPermission('EXPENSE_UPDATE'));
+    readonly canConfirm = computed(() => this.auth.hasPermission('EXPENSE_CONFIRM'));
+    readonly canVoid = computed(() => this.auth.hasPermission('EXPENSE_VOID'));
 
     readonly voidForm = this.formBuilder.nonNullable.group({
         reason: ['', [Validators.required, Validators.maxLength(500)]]

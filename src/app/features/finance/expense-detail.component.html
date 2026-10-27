@@ -119,15 +119,19 @@
             </div>
             <div class="card-body d-flex flex-column gap-2">
                 <a class="btn btn-outline-secondary" routerLink="/finance/expenses">Volver a egresos</a>
-                @if (canWrite() && current.status === 'DRAFT') {
+                @if (current.status === 'DRAFT' && (canUpdate() || canConfirm())) {
+                @if (canUpdate()) {
                 <a class="btn btn-outline-secondary" [routerLink]="['/finance/expenses', current.id, 'edit']">
                     Editar borrador
                 </a>
+                }
+                @if (canConfirm()) {
                 <button class="btn btn-primary" type="button" [disabled]="working()" (click)="confirmExpense()">
                     Confirmar egreso
                 </button>
                 }
-                @if (canWrite() && current.status !== 'VOID') {
+                }
+                @if (canVoid() && current.status !== 'VOID') {
                 <button class="btn btn-outline-danger" type="button" [disabled]="working()"
                     (click)="showVoid.set(true)">
                     Anular egreso

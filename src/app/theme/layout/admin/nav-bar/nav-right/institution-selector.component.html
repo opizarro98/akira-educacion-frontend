@@ -1,0 +1,30 @@
+@if (context.requiresSelection()) {
+<div class="me-2 d-flex align-items-center">
+    <div ngbDropdown placement="bottom-end">
+        <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" ngbDropdownToggle
+            [disabled]="context.loading()">
+            <i class="ti ti-building-bank me-1"></i>
+            {{ context.selected()?.legalName || 'Seleccionar institución' }}
+        </button>
+        <div class="dropdown-menu" ngbDropdownMenu>
+            @for (institution of context.institutions(); track institution.id) {
+            <button type="button" class="dropdown-item d-flex justify-content-between align-items-center"
+                (click)="choose(institution)">
+                <span>{{ institution.legalName }}</span>
+                @if (institution.id === context.selected()?.id) {
+                <i class="ti ti-check ms-2"></i>
+                }
+            </button>
+            } @empty {
+            <span class="dropdown-item-text text-muted">No hay instituciones activas</span>
+            }
+            @if (context.selected()) {
+            <div class="dropdown-divider"></div>
+            <button type="button" class="dropdown-item text-danger" (click)="clearSelection()">
+                <i class="ti ti-x me-1"></i>Quitar selección
+            </button>
+            }
+        </div>
+    </div>
+</div>
+}
